@@ -78,6 +78,7 @@ splatSimulateDR = function(params = newSplatParams(),
   if (verbose) {message("Simulating batch means...")}
   sim = splatter:::splatSimBatchCellMeans(sim, params)
   
+  # TODO: Does this line still need to be here?
   ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbose) {message("Simulating dose-response models...")}
   sim = splatSimDoseResponse(sim, params)
@@ -102,7 +103,7 @@ splatSimulateDR = function(params = newSplatParams(),
 
 
 
-
+# TODO: Does this function still need editing?
 #EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #' Simulate group differential expression
 #'
@@ -137,7 +138,6 @@ splatSimDoseResponse <- function(sim, params) {
   return(sim)
 }
 
-
 #EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #' Simulate group differential expression
 #'
@@ -156,7 +156,7 @@ splatSimDoseResponse <- function(sim, params) {
 #' @importFrom SummarizedExperiment rowData
 #' @export
 splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
-  
+  # TODO: Document this block and the following 2
   nCells <- getParam(params, "nCells")
   nGenes <- getParam(params, "nGenes")
   nDoses = length(unique(colData(sim)$Dose))
@@ -240,6 +240,7 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
   rownames(model.params) = model.params$gene
   metadata(sim)$modelFits = model.params
   
+  # TODO: Document this and the next blocks
   rowData(sim) = cbind(rowData(sim), dose.means)
   dose.facs.gene = dose.means/rowData(sim)$GeneMean
   dose.facs.gene[which(is.na(dose.facs.gene)),'DEFac0'] = 1.0000
