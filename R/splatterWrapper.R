@@ -1,3 +1,15 @@
+#' Simulate dose-response data
+#' 
+#' Add some details here
+#' @param method
+#' 
+#' @seealso 
+#' 
+#' @return sce
+#' 
+#' @examples 
+#' 
+#' @export
 splatSimulateDR = function(params = newSplatParams(), 
                            method = c('doseresp'), 
                            sparsify = TRUE, 
@@ -33,14 +45,14 @@ splatSimulateDR = function(params = newSplatParams(),
   colData(sim)$Dose = factor(doses, levels = dose.names)
   
   if (verbose) {message("Simulating library sizes...")}
-  sim = splatSimLibSizes(sim, params)
+  sim = splatter:::splatSimLibSizes(sim, params)
   sim$ExpLibSize = sim$ExpLibSize * lib.scale
   
   if (verbose) {message("Simulating Gene means...")}
-  sim = splatSimGeneMeans(sim, params)
+  sim = splatter:::splatSimGeneMeans(sim, params)
   
   if (verbose) {message("Simulating batch means...")}
-  sim = splatSimBatchCellMeans(sim, params)
+  sim = splatter:::splatSimBatchCellMeans(sim, params)
   
   ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbose) {message("Simulating dose-response models...")}
@@ -50,13 +62,13 @@ splatSimulateDR = function(params = newSplatParams(),
   sim = splatSimDoseResponseModel(sim, params)
 
   if (verbose) {message("Simulating BCV...")}
-  sim <- splatSimBCVMeans(sim, params)
+  sim <- splatter:::splatSimBCVMeans(sim, params)
   
   if (verbose) {message("Simulating counts...")}
-  sim <- splatSimTrueCounts(sim, params)
+  sim <- splatter:::splatSimTrueCounts(sim, params)
   
   if (verbose) {message("Simulating dropout (if needed)...")}
-  sim <- splatSimDropout(sim, params)
+  sim <- splatter:::splatSimDropout(sim, params)
   assays(sim)$counts[is.na(assays(sim)$counts)] = 0
   assays(sim)$logcounts = log1p(t(t(assays(sim)$counts)/colSums(assays(sim)$counts))*10000)
   
@@ -81,10 +93,9 @@ splatSimulateDR = function(params = newSplatParams(),
 #' @return SingleCellExperiment with simulated differential expression.
 #'
 #' @name splatSimDE
-NULL
-
-#' @rdname splatSimDE
+#' 
 #' @importFrom SummarizedExperiment rowData
+#' @export
 splatSimDoseResponse <- function(sim, params) {
   
   nGenes <- getParam(params, "nGenes")
@@ -96,13 +107,30 @@ splatSimDoseResponse <- function(sim, params) {
   means.gene <- rowData(sim)$GeneMean
   
   
-  de.facs <- getLNormFactors(nGenes, de.prob, de.downProb, de.facLoc, de.facScale)
+  de.facs <- splatter:::getLNormFactors(nGenes, de.prob, de.downProb, de.facLoc, de.facScale)
   rowData(sim)$DE_idx = de.facs
   
   return(sim)
 }
 
 
+#EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#' Simulate group differential expression
+#'
+#' Simulate differential expression. Differential expression factors for each
+#' group are produced using \code{\link{getLNormFactors}} and these are added
+#' along with updated means for each group. For paths care is taken to make sure
+#' they are simulated in the correct order.
+#'
+#' @param sim SingleCellExperiment to add differential expression to.
+#' @param params splatParams object with simulation parameters.
+#'
+#' @return SingleCellExperiment with simulated differential expression.
+#'
+#' @name splatSimDE
+#' 
+#' @importFrom SummarizedExperiment rowData
+#' @export
 splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
   
   nCells <- getParam(params, "nCells")
