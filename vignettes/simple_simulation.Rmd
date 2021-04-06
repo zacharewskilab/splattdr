@@ -8,15 +8,15 @@ output:
     toc: true
     toc_float: true
   vignette: >
-    %\\VignetteIndexEntry{simple DR simulation}
-    %\\VignetteEngine{knitr::rmarkdown}
-    %\\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{simple DR simulation}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
 
 # Installation
 The development version of SplattDR can be installed from Github:
 ```{r}
-devtools::install(...elt())
+#devtools::install(...elt())
 ```
 
 # Quickstart
@@ -25,7 +25,7 @@ SplattDR begins with a `SingleCellExperiment` object. In this example we begin w
 ```{r quick-start}
 # Load packages
 suppressPackageStartupMessages({
-  #library("splattDR")
+  library("splattdr")
   library("splatter")
   library("scater")
   library("ggplot2")
@@ -36,7 +36,7 @@ set.seed(1)
 sce = mockSCE()
 
 # Estimate parameters from the SCE object -- replace with real dose-response
-params <- splatEstimate(sce)
+params <- splatter::splatEstimate(sce)
 
 # Define doses and number of cells per dose
 sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 30)
@@ -125,24 +125,3 @@ ggplot(data = fc.df, aes(x = log(fc), y  = calculatedFC30)) +
   stat_smooth(method = "lm", col = "blue") +
   theme_bw()
 ```
-
-
-```{r}
-de = rowData(sim)[which(rowData(sim)$DE_idx != 1), ]
-de.genes = rownames(de)
-```
-
-```{r}
-df = data.frame(dose = colData(simDR[[1]])$Dose, response = logcounts(simDR[[1]])[de.genes[1], ])
-```
-
-```{r}
-ggplot(data = df, aes(x = dose, y = response)) +
-  geom_point() + 
-  theme_bw()
-
-ggplot(data = df %>% filter(response != 0), aes(x = dose, y = response)) +
-  geom_point() + 
-  theme_bw()
-```
-
