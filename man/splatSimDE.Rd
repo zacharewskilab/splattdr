@@ -4,11 +4,17 @@
 \alias{splatSimDE}
 \alias{splatSimDoseResponse}
 \alias{splatSimDoseResponseModel}
+\alias{calcFC}
+\alias{calcZeroP}
 \title{Simulate group differential expression}
 \usage{
 splatSimDoseResponse(sim, params)
 
 splatSimDoseResponseModel(sim, params, models.prob = rep(1/6, 6))
+
+calcFC(sim)
+
+calcZeroP(sim)
 }
 \arguments{
 \item{sim}{SingleCellExperiment to add differential expression to.}
@@ -19,8 +25,22 @@ splatSimDoseResponseModel(sim, params, models.prob = rep(1/6, 6))
 SingleCellExperiment with simulated differential expression.
 
 SingleCellExperiment with simulated differential expression.
+
+SingleCellExperiment with simulated differential expression.
+
+SingleCellExperiment with simulated differential expression.
 }
 \description{
+Simulate differential expression. Differential expression factors for each
+group are produced using \code{\link{getLNormFactors}} and these are added
+along with updated means for each group. For paths care is taken to make sure
+they are simulated in the correct order.
+
+Simulate differential expression. Differential expression factors for each
+group are produced using \code{\link{getLNormFactors}} and these are added
+along with updated means for each group. For paths care is taken to make sure
+they are simulated in the correct order.
+
 Simulate differential expression. Differential expression factors for each
 group are produced using \code{\link{getLNormFactors}} and these are added
 along with updated means for each group. For paths care is taken to make sure

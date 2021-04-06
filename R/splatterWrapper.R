@@ -1,19 +1,43 @@
 #' Simulate dose-response data
 #' 
-#' Add some details here
-#' @param method
+#' Simulate dose-response single-cell or single-nuclei RNA-seq count data
+#' for a dose-response series of samples.
 #' 
-#' @seealso 
+#' @param params SplatParams object containing parameters for the simulation.
+#'        See \code{\link{splatParams}} from the Splatter package for details.
+#' @param method which simulation method to use. Not currently in use
+#' @param sparsify logical. Whether to convert assay data to sparse matrices
+#'        in order to reduce the final object size/
+#' @param verbose logical. Whether to print progress messages.
+#' @param dose.names vector of the doses to simulate in ascending numerical order.
+#' @param dose.prob vector of cell proportions for each dose. Must add up to 1 and 
+#'        be of the same length as dose.names.
 #' 
-#' @return sce
+#' @details 
+#' 
+#' \enumerate{
+#'     \item step1
+#'     \item step2
+#'     \item step3
+#' }
+#' 
+#' The final output...
+#' 
+#' @return SingleCellExperiment object containing simulated counts and log-normalized
+#'         values.
+#' 
+#' @references
+#' Nault R., ....
 #' 
 #' @examples 
 #' 
+#' @importFrom SingleCellExperiment SingleCellExperiment
+#' @import splatter
 #' @export
 splatSimulateDR = function(params = newSplatParams(), 
                            method = c('doseresp'), 
                            sparsify = TRUE, 
-                           verbose = TRUE,
+                           verbose = FALSE,
                            dose.names = c(0), 
                            dose.prob = c(1),
                            lib.scale = 1.3, ...){
@@ -231,3 +255,61 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
   return(sim)
 }
 
+#EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#' Simulate group differential expression
+#'
+#' Simulate differential expression. Differential expression factors for each
+#' group are produced using \code{\link{getLNormFactors}} and these are added
+#' along with updated means for each group. For paths care is taken to make sure
+#' they are simulated in the correct order.
+#'
+#' @param sim SingleCellExperiment to add differential expression to.
+#' @param params splatParams object with simulation parameters.
+#'
+#' @return SingleCellExperiment with simulated differential expression.
+#'
+#' @name splatSimDE
+#' 
+#' @importFrom SummarizedExperiment rowData
+#' @export
+calcFC = function(sim){
+  dose_vec = sort(unique(colData(sim)$Dose))
+  m0 = rowMeans(as.matrix(logcounts(sim)[,which(colData(sim)$Dose == 0)]))
+  fc = list()
+  for (dose in dose_vec[-1]){
+    temp.means = rowMeans(as.matrix(logcounts(sim)[,which(colData(sim)$Dose == dose)]))
+    fc[[dose]] = temp.means-m0
+  }
+  fc.out = do.call(cbind, lapply(fc, as.data.frame))
+  colnames(fc.out) = paste0('calculatedFC',names(fc))
+  return(fc.out)
+}
+
+#EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#' Simulate group differential expression
+#'
+#' Simulate differential expression. Differential expression factors for each
+#' group are produced using \code{\link{getLNormFactors}} and these are added
+#' along with updated means for each group. For paths care is taken to make sure
+#' they are simulated in the correct order.
+#'
+#' @param sim SingleCellExperiment to add differential expression to.
+#' @param params splatParams object with simulation parameters.
+#'
+#' @return SingleCellExperiment with simulated differential expression.
+#'
+#' @name splatSimDE
+#' 
+#' @importFrom SummarizedExperiment rowData
+#' @export
+calcZeroP = function(sim){
+  dose_vec = sort(unique(colData(sim)$Dose))
+  pz = list()
+  for (dose in dose_vec){
+    temp.df = as.matrix(logcounts(sim)[,which(colData(sim)$Dose == dose)])
+    pz[[dose]] = apply(temp.df, 1, function(x) sum(x == 0)/length(x))
+  }
+  pz.out = do.call(cbind, lapply(pz, as.data.frame))
+  colnames(pz.out) = paste0('percent.zero',names(pz))
+  return(pz.out)
+}

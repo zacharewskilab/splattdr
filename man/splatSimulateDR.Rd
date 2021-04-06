@@ -8,7 +8,7 @@ splatSimulateDR(
   params = newSplatParams(),
   method = c("doseresp"),
   sparsify = TRUE,
-  verbose = TRUE,
+  verbose = FALSE,
   dose.names = c(0),
   dose.prob = c(1),
   lib.scale = 1.3,
@@ -16,17 +16,41 @@ splatSimulateDR(
 )
 }
 \arguments{
-\item{method}{}
+\item{params}{SplatParams object containing parameters for the simulation.
+See \code{\link{splatParams}} from the Splatter package for details.}
+
+\item{method}{which simulation method to use. Not currently in use}
+
+\item{sparsify}{logical. Whether to convert assay data to sparse matrices
+in order to reduce the final object size/}
+
+\item{verbose}{logical. Whether to print progress messages.}
+
+\item{dose.names}{vector of the doses to simulate in ascending numerical order.}
+
+\item{dose.prob}{vector of cell proportions for each dose. Must add up to 1 and
+be of the same length as dose.names.}
 }
 \value{
-sce
+SingleCellExperiment object containing simulated counts and log-normalized
+values.
 }
 \description{
-Add some details here
+Simulate dose-response single-cell or single-nuclei RNA-seq count data
+for a dose-response series of samples.
+}
+\details{
+\enumerate{
+\item step1
+\item step2
+\item step3
+}
+
+The final output...
 }
 \examples{
 
 }
-\seealso{
-
+\references{
+Nault R., ....
 }
