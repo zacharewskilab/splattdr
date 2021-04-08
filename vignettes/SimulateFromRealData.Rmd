@@ -69,12 +69,12 @@ summarizeCell = function(sce, name){
 }
 
 geneData = rbind(
-  summarizeGene(sce, 'Real'),
+  summarizeGene(example_sc_cholangiocytes, 'Real'),
   summarizeGene(sim, 'Simulated')
 )
 
 cellData = rbind(
-  summarizeCell(sce, 'Real'),
+  summarizeCell(example_sc_cholangiocytes, 'Real'),
   summarizeCell(sim, 'Simulated')
 )
 ```
