@@ -1,0 +1,126 @@
+---
+title: "splattDR: Simulating from Real Data and Validating"
+author: "Rance Nault"
+package: "splattDR"
+data: "Last updated: April 7, 2021"
+output: 
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  vignette: >
+    %\VignetteIndexEntry{simple DR simulation}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+```{r}
+# Load packages
+suppressPackageStartupMessages({
+  library("splattdr")
+  library("splatter")
+  library("scater")
+  library("ggplot2")
+  library("ggpubr")
+})
+```
+
+# Estimating initial splat parameters and creating `Params` object
+To compare simulated and real data we want to begin with parameters estimated from that real data. The input for the splattDR simulation is a `SingleCellExperiment` object containing a `counts` matrix where rows are genes and columns are cells. 
+```{r}
+# Download real dose-response data.
+example_sc_cholangiocytes = readRDS('../data/example_sc_cholangiocytes.RData')
+example_sc_cholangiocytes
+```
+This is accomplished using the Splatter `
+```{r}
+params = splatEstimate(example_sc_cholangiocytes)
+params
+```
+
+```{r}
+sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
+dose.prob = rep(1/9, 9)
+
+# Simulate dose response data from parameter estimates
+sim = splatSimulateDR(params, dose.names = sim.dose, dose.prob = dose.prob, verbose = FALSE)
+```
+
+```{r}
+summarizeGene = function(sce, name){
+  df = data.frame(
+    MeanLog = apply(logcounts(sce), 1, function(x) mean(x)),
+    VarLog = apply(logcounts(sce), 1, function(x) var(x)),
+    PctZero = apply(logcounts(sce), 1, function(x) sum(x == 0)/length(x)),
+    Dataset = name
+  )
+  return(df)
+}
+
+summarizeCell = function(sce, name){
+  df = data.frame(
+    MeanLog = apply(logcounts(sce), 2, function(x) mean(x)),
+    VarLog = apply(logcounts(sce), 2, function(x) var(x)),
+    PctZero = apply(logcounts(sce), 2, function(x) sum(x == 0)/length(x)),
+    Dataset = name
+  )
+  return(df)
+}
+
+geneData = rbind(
+  summarizeGene(sce, 'Real'),
+  summarizeGene(sim, 'Simulated')
+)
+
+cellData = rbind(
+  summarizeCell(sce, 'Real'),
+  summarizeCell(sim, 'Simulated')
+)
+```
+
+```{r fig.width = 8}
+MeanZero = ggplot(data = geneData, aes(x = MeanLog, y = PctZero*100, fill = Dataset)) +
+  geom_point(shape = 21, size = 1.8, alpha = 0.6) + 
+  labs(x = "Mean log expression", y = "Percent Zero") +
+  theme_bw() +
+  theme(
+    legend.position = c(0.85,0.8),
+    legend.background = element_rect(fill = "transparent")
+  )
+
+MeanVar = ggplot(data = geneData, aes(x = MeanLog, y = VarLog, fill = Dataset)) +
+  geom_point(shape = 21, size = 1.8, alpha = 0.6) + 
+  labs(x = "Mean log expression", y = "Log expression variance") +
+  theme_bw() +
+  theme(
+    legend.position = c(0.85,0.8),
+    legend.background = element_rect(fill = "transparent")
+  )
+
+ZeroGene = ggplot(data = geneData, aes(x = Dataset, y = PctZero*100, fill = Dataset)) +
+  geom_violin(trim = FALSE, alpha = 0.6) +
+  labs(x = "Dataset", y = "Percent Zero") +
+  geom_boxplot(width = 0.2, fill = "white", aes(color = Dataset), outlier.shape = 21) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+ZeroCell = ggplot(data = cellData, aes(x = Dataset, y = PctZero*100, fill = Dataset)) +
+  ylim(0,100) +
+  geom_violin(trim = FALSE, alpha = 0.6) +
+  labs(x = "Dataset", y = "Percent Zero") +
+  geom_boxplot(width = 0.2, fill = "white", aes(color = Dataset), outlier.shape = 21) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+figure = ggarrange(
+  MeanZero,
+  MeanVar,
+  ZeroGene,
+  ZeroCell,
+  labels = c("A","B","C","D"),
+  ncol = 2, nrow = 2)
+
+figure
+```
+

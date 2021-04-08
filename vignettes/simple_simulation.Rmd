@@ -2,7 +2,7 @@
 title: "splattDR: simulating dose-response single-cell data"
 author: "Rance Nault"
 package: "splattDR"
-data: "Last updated: April 2, 2021"
+data: "Last updated: April 7, 2021"
 output: 
   BiocStyle::html_document:
     toc: true
