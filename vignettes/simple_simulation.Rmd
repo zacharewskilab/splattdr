@@ -16,7 +16,7 @@ output:
 # Installation
 The development version of SplattDR can be installed from Github:
 ```{r}
-#devtools::install(...elt())
+#devtools::install("path")
 ```
 
 # Quickstart
@@ -31,12 +31,8 @@ suppressPackageStartupMessages({
   library("ggplot2")
 })
 
-# Create mock data
-set.seed(1)
-sce = mockSCE()
-
-# Estimate parameters from the SCE object -- replace with real dose-response
-params <- splatter::splatEstimate(sce)
+# Load sample parameters derived from a real dose-response dataset
+data(params)
 
 # Define doses and number of cells per dose
 sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
@@ -64,11 +60,6 @@ SplattDR is a wrapper for [splatter](https://github.com/Oshlack/splatter). The f
 
 SplattDR  uses splatter to simulate single-cell data for a _control_ group. Using baseline expression data, a set proportions of genes are randomly assigned as differentially expressed _(DE)_ using a log-normal distribution. The proportion of DE genes can be obtained from the `Params` object using `getParams'
 ```{r}
-getParam(params, "de.prob")
-```
-It can also be changed using the `setParam` function:
-```{r}
-params = setParam(params, "de.prob", 0.5)
 getParam(params, "de.prob")
 ```
 More details on usage of the `Params` object can be obtained from the [Splatter package](https://github.com/Oshlack/splatter)
