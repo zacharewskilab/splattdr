@@ -253,6 +253,10 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
   rownames(base.means.cell) <- gene.names
   assays(sim)$BaseCellMeans <- base.means.cell
   
+  colnames(cell.means.gene) <- cell.names
+  rownames(cell.means.gene) <- gene.names
+  assays(sim)$ScaledCellMeans <- cell.means.gene
+  
   return(sim)
 }
 
