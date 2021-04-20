@@ -170,6 +170,10 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
   de.ans = rowData(sim)$DE_idx
   de.idx = which(de.ans != 1)
   models.num = floor(models.prob*rep(length(de.idx)))
+  while (sum(models.num) < length(de.idx)){
+    rand.idx = sample(1:length(models.num), 1)
+    models.num[rand.idx] = models.num[rand.idx] + 1
+  }
   models = rep(c('Hill','Power','Linear', 'Exp', 'Exp2', 'ExpB'), models.num)
   
   rowData(sim)$Model = 'Unchanged'
