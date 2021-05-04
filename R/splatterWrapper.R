@@ -65,21 +65,34 @@ splatSimulateDR = function(params = newSplatParams(),
   sim = SingleCellExperiment(rowData = features, colData = cells,
                               metadata = list(Params = params))
   
+  # Create the dose groups
   doses = sample(dose.names, nCells, prob = dose.prob, replace = TRUE)
   colData(sim)$Dose = factor(doses, levels = dose.names)
+  
+  # Create the batches which will serve as replicates
+  if (nBatches > 1) {
+    replicates.groups = split(c(1:nBatches), c(1:length(dose.names)))
+    replicates.values = sapply(as.numeric(colData(sim)$Dose), 
+                               function(x) sample(replicates.groups[[x]], 1))
+    colData(sim)$Batch <- as.factor(paste0('Batch',replicates.values))
+  }
   
   if (verbose) {message("Simulating library sizes...")}
   sim = splatter:::splatSimLibSizes(sim, params)
   sim$ExpLibSize = sim$ExpLibSize * lib.scale
-  
+
   if (verbose) {message("Simulating Gene means...")}
   sim = splatter:::splatSimGeneMeans(sim, params)
   
-  if (verbose) {message("Simulating batch means...")}
+  if (nBatches > 1) {
+    if (verbose) {message("Simulating batch effects...")}
+    sim <- splatter:::splatSimBatchEffects(sim, params)
+  }
+  
+  if (verbose) {message("Simulating cell means...")}
   sim = splatter:::splatSimBatchCellMeans(sim, params)
   
-  # TODO: Does this line still need to be here?
-  ##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   if (verbose) {message("Simulating dose-response models...")}
   sim = splatSimDoseResponse(sim, params)
   
@@ -97,7 +110,6 @@ splatSimulateDR = function(params = newSplatParams(),
   assays(sim)$counts[is.na(assays(sim)$counts)] = 0
   assays(sim)$logcounts = log1p(t(t(assays(sim)$counts)/colSums(assays(sim)$counts))*10000)
   
-
   return(sim)
 }
 
@@ -321,4 +333,35 @@ calcZeroP = function(sim){
   pz.out = do.call(cbind, lapply(pz, as.data.frame))
   colnames(pz.out) = paste0('percent.zero',names(pz))
   return(pz.out)
+}
+
+
+#' Simulate batch effects
+#'
+#' Simulate batch effects. Batch effect factors for each batch are produced
+#' using \code{\link{getLNormFactors}} and these are added along with updated
+#' means for each batch.
+#'
+#' @param sim SingleCellExperiment to add batch effects to.
+#' @param params SplatParams object with simulation parameters.
+#'
+#' @return SingleCellExperiment with simulated batch effects.
+#'
+#' @importFrom SummarizedExperiment rowData rowData<-
+splattSimReplicates <- function(sim, params) {
+  
+  nGenes <- getParam(params, "nGenes")
+  nBatches <- getParam(params, "nBatches")
+  batch.facLoc <- getParam(params, "batch.facLoc")
+  batch.facScale <- getParam(params, "batch.facScale")
+  means.gene <- rowData(sim)$GeneMean
+  
+  for (idx in seq_len(nBatches)) {
+    batch.facs <- splatter:::getLNormFactors(nGenes, 1, 0.5, batch.facLoc[idx],
+                                  batch.facScale[idx])
+    
+    rowData(sim)[[paste0("BatchFacBatch", idx)]] <- batch.facs
+  }
+  
+  return(sim)
 }

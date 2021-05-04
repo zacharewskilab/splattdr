@@ -45,7 +45,8 @@ sim = splatSimulateDR(params, dose.names = sim.dose, dose.prob = dose.prob, verb
 sim = runPCA(sim)
 pca.df = data.frame(PC1 = reducedDim(sim)[,1], 
                     PC2 = reducedDim(sim)[,2],
-                    Dose = colData(sim)$Dose
+                    Dose = colData(sim)$Dose,
+                    Batch = colData(sim)$Batch
                     )
 
 ggplot(data = pca.df, aes(x = PC1, y = PC2)) +

@@ -5,7 +5,7 @@
 \title{Simulate expression that follows an exponential model
 response = response = a * exp(sign * (b * dose)^d)}
 \usage{
-splatsimExp(doses, mean, fc, power = FALSE)
+splatsimExp(doses, mean, fc, power = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{doses}{A vector of doses to model}

@@ -37,7 +37,7 @@ splatsimHill = function(doses, mean = 1, fc = 1.5){
 #' @examples 
 #' simExp(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimExp = function(doses, mean, fc, power = FALSE){
+splatsimExp = function(doses, mean, fc, power = FALSE, verbose = FALSE){
   fc.max = 1E100
   mult.fac = 0.01
   iter = 0
@@ -45,12 +45,12 @@ splatsimExp = function(doses, mean, fc, power = FALSE){
     iter = iter + 1
     a = mean
     if (fc < 1){
-      b = runif(1, -0.1, 0)
+      b = runif(1, -1, 0)
     } else {
-      b = runif(1, 0, 0.1)
+      b = runif(1, 0, 1)
     }
     if (power){
-      d = runif(1, 0,10)
+      d = runif(1, 0,18)
     } else {
       d = 1
     }
@@ -60,9 +60,19 @@ splatsimExp = function(doses, mean, fc, power = FALSE){
     if (fc < 1){
       fc.max = 1/fc.max
     }
-    if (iter%%10000 == 0){
-      {message("Relaxing fold-change range criteria...")}
-      mult.fac = mult.fac * 10
+    if (iter%%1000000 == 0){
+      if (verbose){message(paste0("Relaxing exponential fold-change range criteria..., mean: ",
+                           mean, 
+                           ", fc: ",
+                           fc,
+                           ", b: ",
+                           b,
+                           ", d: ",
+                           d,
+                           ", fc.max: ",
+                           fc.max
+                           ))}
+      mult.fac = mult.fac * 1
     }
   }
   return(list(resp = resp, a = a, fc = fc, b = b, d = d))
@@ -102,17 +112,20 @@ splatsimExpB = function(doses, mean, fc = 1.5){
 #' @examples 
 #' simPower(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimPower = function(doses, mean, fc, downregulated = FALSE){
+splatsimPower = function(doses, mean, fc, downregulated = FALSE, verbose = FALSE){
   fc.max = 1E100
   mult.fac = 0.01
   iter = 0
-  while (fc.max > fc + fc*mult.fac | fc.max < fc - fc*mult.fac){
+  beta.fac = 10
+  while (fc.max > fc + fc*mult.fac | fc.max < fc - fc*mult.fac | fc.max < 0){
     iter = iter + 1
     gamma = mean
     if (fc < 1){
-      beta = runif(1, -10^-floor(abs(log(mean))), 0)
+      beta.start = -10^-floor(abs(log(mean)))
+      beta = runif(1, beta.start, beta.start/beta.fac)
     } else {
-      beta = runif(1, 0, 10^-floor(abs(log(mean))))
+      beta.start = 10^-floor(abs(log(mean)))
+      beta = runif(1, beta.start/beta.fac, beta.start*beta.fac)
     }
     
     delta = runif(1, 0, 5)
@@ -122,9 +135,9 @@ splatsimPower = function(doses, mean, fc, downregulated = FALSE){
     if (fc < 1){
       fc.max = 1/fc.max
     }
-    if (iter%%10000 == 0){
-      {message("Relaxing fold-change range criteria...")}
-      mult.fac = mult.fac * 10
+    if (iter%%1000000 == 0){
+      if (verbose){message("Adjusting Power model beta starting parameters...")}
+      beta.fac = beta.fac * 10
     }
   }
   return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
@@ -184,4 +197,41 @@ simUnchanged = function(doses, realVec){
   n.doses = length(doses)
   resp = sample(realVec, n.doses, replace = FALSE)
   return(list(resp = resp))
+}
+
+
+#' Simulate expression that follows an power model
+#' response = gamma + beta * doses^delta
+#' 
+#' @param doses A vector of doses to model
+#' @param mean.range A vector of means obtain from realData
+#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
+#' @param downregulated set a TRUE to model repression instead of induction
+#' @return a list of the model fit parameters including
+#' @examples 
+#' simPower(c(0,1,3,10,30), realData$mean)
+#' @export
+# Unchanged genes
+estimateRealVals = function(sim){
+  model.fits = metadata(sim)$modelFits[,1:9]
+  corrected = (model.fits/mean(colSums(assays(sim)$ScaledCellMeans)))*mean(colData(sim)$ExpLibSize)
+  return(corrected)
+}
+
+#' Simulate expression that follows an power model
+#' response = gamma + beta * doses^delta
+#' 
+#' @param doses A vector of doses to model
+#' @param mean.range A vector of means obtain from realData
+#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
+#' @param downregulated set a TRUE to model repression instead of induction
+#' @return a list of the model fit parameters including
+#' @examples 
+#' simPower(c(0,1,3,10,30), realData$mean)
+#' @export
+# Unchanged genes
+estimateRealVals = function(sim){
+  model.fits = metadata(sim)$modelFits[,1:9]
+  corrected = (model.fits/mean(colSums(assays(sim)$ScaledCellMeans)))*mean(colData(sim)$ExpLibSize)
+  return(corrected)
 }
