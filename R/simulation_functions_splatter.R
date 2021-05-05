@@ -60,20 +60,11 @@ splatsimExp = function(doses, mean, fc, power = FALSE, verbose = FALSE){
     if (fc < 1){
       fc.max = 1/fc.max
     }
-    if (iter%%1000000 == 0){
-      if (verbose){message(paste0("Relaxing exponential fold-change range criteria..., mean: ",
-                           mean, 
-                           ", fc: ",
-                           fc,
-                           ", b: ",
-                           b,
-                           ", d: ",
-                           d,
-                           ", fc.max: ",
-                           fc.max
-                           ))}
-      mult.fac = mult.fac * 1
+    if (iter%%1000000000 == 0){
+      if (verbose){message("Relaxing exponential fold-change range criteria...")}
+      mult.fac = mult.fac * 10
     }
+    
   }
   return(list(resp = resp, a = a, fc = fc, b = b, d = d))
 }
@@ -138,6 +129,10 @@ splatsimPower = function(doses, mean, fc, downregulated = FALSE, verbose = FALSE
     if (iter%%1000000 == 0){
       if (verbose){message("Adjusting Power model beta starting parameters...")}
       beta.fac = beta.fac * 10
+    }
+    if (iter%%1000000000 == 0){
+      beta.fac = 10
+      mult.fac = mult.fac * 10
     }
   }
   return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
