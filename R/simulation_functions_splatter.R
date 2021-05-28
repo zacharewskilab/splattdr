@@ -9,7 +9,7 @@
 #' @examples 
 #' simHill(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimHill = function(doses, mean = 1, fc = 1.5){
+splatsimHill = function(doses, mean = 1, fc = 1.5, verbose = FALSE){
   k.vals = c()
   for (d in 2:length(doses)){
     k.vals = c(k.vals, seq(doses[d-1], doses[d], length.out = 100))
@@ -37,7 +37,7 @@ splatsimHill = function(doses, mean = 1, fc = 1.5){
 #' @examples 
 #' simExp(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimExp = function(doses, mean, fc, power = FALSE, verbose = FALSE){
+splatsimExp = function(doses, mean, fc, power = FALSE, max_iter = 40, verbose = FALSE){
   fc.max = 1E100
   mult.fac = 0.01
   iter = 0
@@ -81,7 +81,7 @@ splatsimExp = function(doses, mean, fc, power = FALSE, verbose = FALSE){
 #' @examples 
 #' simExpB(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimExpB = function(doses, mean, fc = 1.5){
+splatsimExpB = function(doses, mean, fc = 1.5, verbose = FALSE){
   a = mean
   b = runif(1, 0, 1) #CHANGE
   c = fc
@@ -103,42 +103,58 @@ splatsimExpB = function(doses, mean, fc = 1.5){
 #' @examples 
 #' simPower(c(0,1,3,10,30), realData$mean)
 #' @export
-splatsimPower = function(doses, mean, fc, downregulated = FALSE, verbose = FALSE){
-  fc.max = 1E100
-  mult.fac = 0.01
-  iter = 0
-  beta.fac = 10
+splatsimPower <- function(doses, mean, fc, downregulated = FALSE, max_iter = 40, 
+                          verbose = FALSE){
+  fc.max <- 1E100
+  mult.fac <- 0.01
+  delta <- runif(1, 0, 5)
+  iter <- 0
+  if (fc < 1){
+    beta <- -10^-floor(abs(log(mean)))
+  } else {
+    beta <- 10^-floor(abs(log(mean)))
+  }
+  beta.a = beta + beta
+  beta.b = beta
+  
   while (fc.max > fc + fc*mult.fac | fc.max < fc - fc*mult.fac | fc.max < 0){
-    iter = iter + 1
-    gamma = mean
+    iter <- iter + 1
+    gamma <- mean
+
+    resp.a <- modelPower(doses, gamma, beta.a, delta)
+    resp.b <- modelPower(doses, gamma, beta.b, delta)
+    fc.a <- max(resp.a)/min(resp.a)
+    fc.b <- max(resp.b)/min(resp.b)
     if (fc < 1){
-      beta.start = -10^-floor(abs(log(mean)))
-      beta = runif(1, beta.start, beta.start/beta.fac)
+      fc.a <- 1/fc.a
+      fc.b <- 1/fc.b
+    }
+    
+    if (abs(fc.a - fc) < abs(fc.b - fc)){
+      fc.max = fc.a
+      beta = beta.a
+      beta.a = beta.a*1.01
+      beta.b = beta.a/1.001
+      resp = resp.a
     } else {
-      beta.start = 10^-floor(abs(log(mean)))
-      beta = runif(1, beta.start/beta.fac, beta.start*beta.fac)
+      fc.max = fc.b
+      beta = beta.b
+      beta.a = beta.b*1.01
+      beta.b = beta.b/1.001
+      resp= resp.b
     }
     
-    delta = runif(1, 0, 5)
-    
-    resp = modelPower(doses, gamma, beta, delta)
-    fc.max = max(resp)/min(resp)
-    if (fc < 1){
-      fc.max = 1/fc.max
-    }
     if (iter%%1000000 == 0){
       if (verbose){message("Adjusting Power model beta starting parameters...")}
-      beta.fac = beta.fac * 10
     }
-    if (iter%%1000000000 == 0){
-      beta.fac = 10
-      mult.fac = mult.fac * 10
+    if (iter%%(1000000*max_iter) == 0){
+      if (verbose){message("Failed to find parameter values for power model...")}
     }
   }
   return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
 }
 
-splatsimLinear = function(doses, mean, fc){
+splatsimLinear = function(doses, mean, fc, verbose = FALSE){
   gamma = mean
   beta = ((mean * fc) - mean)/max(doses)
   resp = modelPolynomial(doses, gamma, beta)
@@ -157,7 +173,7 @@ splatsimLinear = function(doses, mean, fc){
 #' @examples 
 #' simPower(c(0,1,3,10,30), realData$mean)
 #' @export
-simPolynomial = function(doses, mean.range, fc.range = c(1.3, 5), downregulated = FALSE){
+simPolynomial = function(doses, mean.range, fc.range = c(1.3, 5), downregulated = FALSE, verbose = FALSE){
   resp = max(mean.range) * 2 # To initiate while loop
   polyN = sample(c(2,3,4), 1)
   
@@ -229,4 +245,55 @@ estimateRealVals = function(sim){
   model.fits = metadata(sim)$modelFits[,1:9]
   corrected = (model.fits/mean(colSums(assays(sim)$ScaledCellMeans)))*mean(colData(sim)$ExpLibSize)
   return(corrected)
+}
+
+#' Simulate expression that follows an power model
+#' response = gamma + beta * doses^delta
+#' 
+#' @param doses A vector of doses to model
+#' @param mean.range A vector of means obtain from realData
+#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
+#' @param downregulated set a TRUE to model repression instead of induction
+#' @return a list of the model fit parameters including
+#' @examples 
+#' simPower(c(0,1,3,10,30), realData$mean)
+#' @export
+old_splatsimPower = function(doses, mean, fc, downregulated = FALSE, max_iter = 40, verbose = FALSE){
+  fc.max = 1E100
+  mult.fac = 0.01
+  iter = 0
+  beta.fac = 10
+  while (fc.max > fc + fc*mult.fac | fc.max < fc - fc*mult.fac | fc.max < 0){
+    iter = iter + 1
+    gamma = mean
+    if (fc < 1){
+      beta.start = -10^-floor(abs(log(mean)))
+      beta = runif(1, beta.start, beta.start/beta.fac)
+    } else {
+      beta.start = 10^-floor(abs(log(mean)))
+      beta = runif(1, beta.start/beta.fac, beta.start*beta.fac)
+    }
+    
+    delta = runif(1, 0, 5)
+    
+    resp = modelPower(doses, gamma, beta, delta)
+    fc.max = max(resp)/min(resp)
+    if (fc < 1){
+      fc.max = 1/fc.max
+    }
+    if (iter%%1000000 == 0){
+      if (verbose){message("Adjusting Power model beta starting parameters...")}
+      beta.fac = beta.fac * 10
+    }
+    if (iter%%(1000000*max_iter) == 0){
+      if (verbose){message("Failed to find parameter values for power model...")}
+      beta.fac = 10
+      print(mean)
+      print(fc)
+      print(beta)
+      print(beta.start)
+      print('-----')
+    }
+  }
+  return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
 }
