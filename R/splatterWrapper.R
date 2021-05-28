@@ -97,7 +97,7 @@ splatSimulateDR = function(params = newSplatParams(),
   sim = splatSimDoseResponse(sim, params)
   
   if (verbose) {message("Simulating dose-response models, part 2...")}
-  sim = splatSimDoseResponseModel(sim, params)
+  sim = splatSimDoseResponseModel(sim, params, verbose = verbose)
 
   if (verbose) {message("Simulating BCV...")}
   sim <- splatter:::splatSimBCVMeans(sim, params)
@@ -167,7 +167,7 @@ splatSimDoseResponse <- function(sim, params) {
 #' 
 #' @importFrom SummarizedExperiment rowData
 #' @export
-splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
+splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6), verbose = FALSE){
   # TODO: Document this block and the following 2
   nCells <- getParam(params, "nCells")
   nGenes <- getParam(params, "nGenes")
@@ -204,35 +204,35 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
     }
     ix.name = as.character(rowData(sim)[ix,'Gene'])
     if (rowData(sim)[ix, 'Model'] == 'Hill'){
-      o = splatsimHill(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'])
+      o = splatsimHill(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], verbose = verbose)
       dose.means[ix,] = o$resp
       o$resp = split(o$resp, dose.names)
       o$gene = ix.name
       m.list[[ix.name]] = o
       
     } else if (rowData(sim)[ix, 'Model'] == 'Exp'){
-      o = splatsimExp(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'])
+      o = splatsimExp(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], verbose = verbose)
       dose.means[ix,] = o$resp
       o$resp = split(o$resp, dose.names)
       o$gene = ix.name
       m.list[[ix.name]] = o
       
     } else if (rowData(sim)[ix, 'Model'] == 'Exp2'){
-      o = splatsimExp(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], power = TRUE)
+      o = splatsimExp(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], power = TRUE, verbose = verbose)
       dose.means[ix,] = o$resp
       o$resp = split(o$resp, dose.names)
       o$gene = ix.name
       m.list[[ix.name]] = o
       
     } else if (rowData(sim)[ix, 'Model'] == 'ExpB'){
-      o = splatsimExpB(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'])
+      o = splatsimExpB(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], verbose = verbose)
       dose.means[ix,] = o$resp
       o$resp = split(o$resp, dose.names)
       o$gene = ix.name
       m.list[[ix.name]] = o
       
     } else if (rowData(sim)[ix, 'Model'] == 'Power'){
-      o = splatsimPower(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'])
+      o = splatsimPower(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], verbose = verbose)
       if (is.null(o$resp)){
         print(paste('power_',ix))
         dose.means[ix,] = rep(rowData(sim)[ix,'GeneMean'], 9)
@@ -243,7 +243,7 @@ splatSimDoseResponseModel = function(sim, params, models.prob = rep(1/6, 6)){
         m.list[[ix.name]] = o
       }
     } else if (rowData(sim)[ix, 'Model'] == 'Linear'){
-      o = splatsimLinear(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'])
+      o = splatsimLinear(dose.names, mean = rowData(sim)[ix, 'GeneMean'], fc = rowData(sim)[ix, 'DE_idx'], verbose = verbose)
       dose.means[ix,] = o$resp
       o$resp = split(o$resp, dose.names)
       o$gene = ix.name

@@ -5,7 +5,7 @@
 \title{Simulate expression that follows a Hill model
 response = gamma + (V * doses^n)/(k^n + doses^n)}
 \usage{
-splatsimHill(doses, mean = 1, fc = 1.5)
+splatsimHill(doses, mean = 1, fc = 1.5, verbose = FALSE)
 }
 \arguments{
 \item{doses}{A vector of doses to model}

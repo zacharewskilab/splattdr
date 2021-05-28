@@ -5,7 +5,13 @@
 \title{Simulate expression that follows an power model
 response = gamma + beta * doses^delta}
 \usage{
-simPolynomial(doses, mean.range, fc.range = c(1.3, 5), downregulated = FALSE)
+simPolynomial(
+  doses,
+  mean.range,
+  fc.range = c(1.3, 5),
+  downregulated = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{doses}{A vector of doses to model}

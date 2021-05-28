@@ -10,7 +10,12 @@
 \usage{
 splatSimDoseResponse(sim, params)
 
-splatSimDoseResponseModel(sim, params, models.prob = rep(1/6, 6))
+splatSimDoseResponseModel(
+  sim,
+  params,
+  models.prob = rep(1/6, 6),
+  verbose = FALSE
+)
 
 calcFC(sim)
 
