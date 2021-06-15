@@ -1,0 +1,110 @@
+---
+title: "splattDR: Simulating from Real Data and Validating"
+author: "Rance Nault"
+package: "splattDR"
+data: "Last updated: May 12, 2021"
+output: 
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+  vignette: >
+    %\VignetteIndexEntry{simple DR simulation}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+```{r}
+# Load packages
+suppressPackageStartupMessages({
+  library("Seurat")
+  library("splattdr")
+  library("splatter")
+  library("ggplot2")
+  library("ggpubr")
+  library("dplyr")
+})
+
+set.seed(518)
+
+# Model fitting equations for diagnostic plots
+fo <- PctZero * 100 ~ a * exp(b * MeanLog) + t
+fv <- VarLog ~ poly(MeanLog, 3)
+```
+
+# Load simulation summaries (full)
+```{r}
+dr.dataset = readRDS('C://Users/15177/Downloads/drSim/geneData.RData')
+td.dataset = readRDS('C://Users/15177/Downloads/tdSim/geneData.RData')
+xiong.dataset = readRDS('C://Users/15177/Downloads/xionSim/geneData.RData')
+
+dr.dataset$sim = 'dose-response'
+td.dataset$sim = 'two-dose'
+xiong.dataset$sim = 'whole cell'
+```
+
+# Compare full datasets
+```{r fig.heigh = 1, fig.with = 2}
+ref.real <- dr.dataset %>% filter(type  == 'Real')
+ref.sim <- dr.dataset %>%filter(type == 'Simulated')
+test1.real <- td.dataset %>%filter(type == 'Real')
+test1.sim <- td.dataset %>%filter(type == 'Simulated')
+test2.real <- xiong.dataset %>%filter(type == 'Real')
+test2.sim <- xiong.dataset %>%filter(type == 'Simulated')
+
+full.model <- nls(fo, ref.real, start = list(a = 100, b = -1, t = 1))
+
+ref.real.predicted <- predict(full.model, newdata = ref.real[,c('MeanLog'), drop=FALSE])
+ref.predicted <- predict(full.model, newdata = ref.sim[,c('MeanLog'), drop=FALSE])
+test1.real.predicted <- predict(full.model, newdata = test1.real[,c('MeanLog'), drop=FALSE])
+test1.predicted <- predict(full.model, newdata = test1.sim[,c('MeanLog'), drop=FALSE])
+test2.real.predicted <- predict(full.model, newdata = test2.real[,c('MeanLog'), drop=FALSE])
+test2.predicted <- predict(full.model, newdata = test2.sim[,c('MeanLog'), drop=FALSE])
+
+rmse.list = list()
+rmse.list[['dose-response real']] <- RMSE(ref.real$PctZero*100, ref.real.predicted)
+rmse.list[['dose-response simulated']] <- RMSE(ref.sim$PctZero*100, ref.predicted)
+rmse.list[['two dose real']] <- RMSE(test1.real$PctZero*100, test1.real.predicted)
+rmse.list[['two dose simulated']] <- RMSE(test1.sim$PctZero*100, test1.predicted)
+rmse.list[['whole cell real']] <- RMSE(test2.real$PctZero*100, test2.real.predicted)
+rmse.list[['whole cell simulated']] <- RMSE(test2.sim$PctZero*100, test2.predicted)
+rmse.df = data.frame(do.call('rbind', rmse.list))
+rmse.df$dataset = c(rep('dose-response',2), rep('two dose', 2), rep('whole cell', 2))
+rmse.df$type = c(rep(c('real', 'simulated'),3))
+rmse.df$comparison = 'dataset'
+rmse.df
+
+ggplot(data = rmse.df, aes(x = comparison, y = nrmsd, label = dataset)) +
+  geom_boxplot() +
+  geom_jitter(position = position_jitter(seed = 1), size = 6, pch = 21, alpha = 0.8, aes(fill = type)) +
+  scale_fill_manual(values = c('blue', 'red')) +
+  geom_text(position = position_jitter(seed = 1), color = 'black') +
+  theme_bw()
+```
+
+
+```{r}
+dr.summaries = readRDS('C://Users/15177/Downloads/drSim/cell.summaries2.list.RData')
+dr.summaries = do.call("rbind", dr.summaries)
+td.summaries = readRDS('C://Users/15177/Downloads/tdSim/cell.summaries2.list.RData')
+td.summaries = do.call("rbind", td.summaries)
+xiong.summaries = readRDS('C://Users/15177/Downloads/xionSim/cell.summaries2.list.RData')
+xiong.summaries = do.call("rbind", xiong.summaries)
+
+geneData = do.call("rbind", gene.summaries.list)
+
+statData = data.frame(do.call("rbind", stat.values))
+```
+
+
+```{r}
+statData = data.frame(do.call("rbind", stat.values))
+statData$celltype = rownames(statData)
+statData$dataset = 'dr'
+ggplot(data = statData, aes(x = dataset, y = sim.nrmsd, label = celltype)) +
+  geom_boxplot() + 
+  geom_jitter(position = position_jitter(seed = 1), aes(size = ncells)) +
+  geom_text(position = position_jitter(seed = 1), color = 'blue') +
+  theme_bw()
+```
+

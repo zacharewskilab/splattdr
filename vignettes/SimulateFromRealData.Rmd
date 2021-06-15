@@ -28,6 +28,7 @@ suppressPackageStartupMessages({
   library("ggplot2")
   library("ggpubr")
   library("dplyr")
+  library("scater")
 })
 
 set.seed(518)
@@ -64,7 +65,7 @@ sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
 dose.prob = rep(1/9, 9)
 group.Size = 3
 n.Cells = 500*9
-n.Genes = 10000
+n.Genes = 2000
 ```
 
 ```{r}
@@ -86,15 +87,26 @@ sim.full = splatSimulateDR(params, dose.names = sim.dose,
 ```
 
 ```{r}
+# a = summarizeGene(sca,'Real', 'full')
 geneData = rbind(
-  summarizeGene(sca,'Real', 'full'),
+  a,
   summarizeGene(sim.full, 'Simulated', 'full')
 )
-
+#b = summarizeCell(sca, 'Real', 'full')
 cellData = rbind(
-  summarizeCell(sca, 'Real', 'full'),
+  b,
   summarizeCell(sim.full, 'Simulated', 'full')
 )
+
+# geneData = rbind(
+#   summarizeGene(sca,'Real', 'full'),
+#   summarizeGene(sim.full, 'Simulated', 'full')
+# )
+# 
+# cellData = rbind(
+#   summarizeCell(sca, 'Real', 'full'),
+#   summarizeCell(sim.full, 'Simulated', 'full')
+# )
 
 geneReal <- geneData %>% filter(type  == 'Real')
 geneSim <- geneData %>%filter(type == 'Simulated')
@@ -109,8 +121,8 @@ rmse.sim <- RMSE(geneSim$PctZero*100, predict(full.model, newdata = geneSim[,c('
 
 var.rmse.real <- RMSE(geneReal$VarLog, predict(full.model.var, geneReal))
 var.rmse.sim <- RMSE(geneSim$VarLog, predict(full.model.var, geneSim))
-saveRDS(geneData, file = 'geneData.RData')
-saveRDS(cellData, file = 'cellData.RData')
+# saveRDS(geneData, file = 'geneData.RData')
+# saveRDS(cellData, file = 'cellData.RData')
 ```
 
 ```{r}
@@ -221,7 +233,7 @@ simulate 4500 cells equally distributed among the doses and 5000 unique genes.
 ```{r}
 sim.list = list()
 
-for (ct in unique.celltypes[8:11]){
+for (ct in unique.celltypes){
   params = params.list[[ct]]
   params@nBatches = length(sim.dose)*3
   params@batch.facLoc = rep(0.1, params@nBatches)
