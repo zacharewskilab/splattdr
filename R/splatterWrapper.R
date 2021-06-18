@@ -301,8 +301,12 @@ calcFC = function(sim){
     temp.means = rowMeans(as.matrix(logcounts(sim)[,which(colData(sim)$Dose == dose)]))
     fc[[dose]] = temp.means-m0
   }
+  if (length(dose_vec) > 2){
   fc.out = do.call(cbind, lapply(fc, as.data.frame))
   colnames(fc.out) = paste0('calculatedFC',names(fc))
+  } else {
+    fc.out <- data.frame(fc[[dose]])
+  }
   return(fc.out)
 }
 
