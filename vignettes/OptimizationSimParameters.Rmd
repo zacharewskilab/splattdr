@@ -4,8 +4,6 @@ output: html_notebook
 ---
 
 # Comparing fold-changes
-
-
 ```{r}
 suppressPackageStartupMessages({
   library("Seurat")
@@ -16,50 +14,72 @@ suppressPackageStartupMessages({
   library("dplyr")
   library("scater")
   library("factoextra")
+  library("purrr")
+  library("LaplacesDemon")
 })
 ```
 
 
 ```{r eval=FALSE}
-real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/GSE148339_liver.integrated.final.RData') #Change to DR Dataset
+real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/GSE148339_liver.integrated.final.RData')
 unique.celltypes = unique(real.data$celltype)
 real.sce <- as.SingleCellExperiment(real.data)
-colData(real.sce)$Dose <- ifelse(colData(real.sce)$treatment == 'CONTROL', 0, 30)
-dose_vec = sort(unique(colData(real.sce)$Dose)
+colData(real.sce)$Dose <- ifelse(colData(real.sce)$treatment == 'CONTROL', 
+                                 0, 30)
+dose_vec = sort(unique(colData(real.sce)$Dose))
 ```
 
 ```{r eval = FALSE}
-real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/Zacharewski.tcdd.snseq.doseresponse.011321.RData') #Change to DR Dataset
+real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/Zacharewski.tcdd.snseq.doseresponse.011321.RData')
 colnames(real.data@meta.data)[107] = 'celltype'
 unique.celltypes = unique(real.data$celltype)
 real.sce <- as.SingleCellExperiment(real.data)
 dose_vec = sort(unique(colData(real.sce)$Dose)
 ```
 
+For each cell type in the real dataset we calculate the gene-wise fold changes 
+using the `calcFC` function. To examine the distribution of the fold changes 
+we will focus on the highest dose (30 ug/kg) as it consists of the largest
+proportion of differentially expressed genes and largest fold-changes. 
 ```{r}
 real.fc <- list()
 for (ct in unique.celltypes[1:10]){
   sce  <- real.sce[,which(colData(real.sce)$celltype == ct)]
+  colData(sce)$Dose <- as.factor(colData(sce)$Dose)
   foldChange <- calcFC(sce)
   foldChange$celltype <- ct
   real.fc[[ct]] <- foldChange
 }
 real.fc.table <- do.call('rbind', real.fc)
 real.fc.table$dataset <- 'real'
-colnames(real.fc.table) <- gsub('fc..dose..', 'calculatedFC30', colnames(real.fc.table))
+colnames(real.fc.table) <- gsub('fc..dose..', 'calculatedFC30', 
+                                colnames(real.fc.table))
+saveRDS(real.fc.table, file = 'real.fc.table.062121.RData')
 ```
 
-
-```{r fig.width = 14, fig.height = 4}
-ggplot(data = real.fc.table, aes(x = calculatedFC30, color = celltype)) +
-  geom_density(size = 1.1) + 
+The following plot demonstrates the distribution of fold-changes in each 
+celltype. 
+```{r fig.width = 9, fig.height = 4}
+ggplot(data = real.fc.table, aes(x = calculatedFC30, 
+                                 color = celltype, 
+                                 fill = celltype)) +
+  geom_density(size = 0.5, alpha = 0.3) + 
   theme_bw()
 ```
-
+We next want to determine how various parameters influences the distribution of
+fold changes in order to reproduce true dose-response single-nuclei data. 
+Parameters expected to influence the fold change distribution are: `de.facLoc` 
+and `de.facScale` specify the differences between groups following a log-normal 
+distribution. We will also test the proportion of differentially expressed genes
+using the `de.prob` and `de.downProb` parameters. 
 ```{r}
 sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
 dose.prob = rep(1/9, 9)
-data(params)
+# TODO: Fix the broken parameters object with the rmBatchEffects issue
+  #data(params)
+  p <- readRDS('/mnt/home/naultran/drSims/params.list.RData')
+  params <- p[[1]]
+#
 params@nGenes = 2000
 params@nBatches = length(sim.dose)*3
 params@batch.facLoc = rep(0.1, params@nBatches)
@@ -69,8 +89,8 @@ params@nCells = 500*9
 par.opts <- list()
 for (facLoc in c(-1, -0.5, -0.2, 0, 0.2, 0.5, 1)){
   for (facScale in c(0, 0.2, 0.5, 1, 1.5)){
-    for (probDown in c(0.1, 0.5, 0.9)){
-      for (probDE in c(0.05, 0.1, 0.25)){
+    for (probDown in c(0.1, 0.25, 0.5, 0.75, 0.9)){
+      for (probDE in c(0, 0.05, 0.1, 0.25, 0.5, 0.75, 1)){
         name <- paste0(facLoc, '_', facScale, '_', probDown, '_', probDE)
         print(name)
         # Define doses and number of cells per dose
@@ -95,7 +115,7 @@ par.opts.table$dataset = par.opts.table$celltype
 ```
 
 ```{r fig.height = 24, fig.width = 24}
-real.subsampled <- real.fc.table[sample(1:nrow(fc.table), params@nGenes),]
+real.subsampled <- real.fc.table[sample(1:nrow(real.fc.table), params@nGenes),]
 real.subsampled.fc <- real.subsampled[ , 'calculatedFC30', drop = FALSE]
 
 ggplot(data = par.opts.table, aes(x = calculatedFC30)) +
@@ -108,20 +128,48 @@ ggplot(data = par.opts.table, aes(x = calculatedFC30)) +
 
 ```{r}
 combined.table <- data.frame(
-  dataset = c(real.fc.table$dataset, par.opts.table$dataset),
-  calculatedFC30 = c(real.fc.table$calculatedFC30, par.opts.table$calculatedFC30)
+  dataset = c(real.subsampled$dataset, par.opts.table$dataset),
+  calculatedFC30 = c(real.subsampled$calculatedFC30, par.opts.table$calculatedFC30)
 )
+saveRDS(combined.table, file = 'combined.table.061821.RData')
 
-summary.df <- combined.table %>% group_by(dataset) %>% summarize(mean = mean(calculatedFC30), median = median(calculatedFC30), min = min(calculatedFC30), max = max(calculatedFC30), sd = sd(calculatedFC30)) %>% select(mean, median, min, max, sd)
-rownames(summary.df) <- unique(combined.table$dataset)
+#summary.df <- data.frame(combined.table %>% group_by(dataset) %>% summarize(mean = mean(calculatedFC30), median = median(calculatedFC30), min = min(calculatedFC30), max = max(calculatedFC30), sd = sd(calculatedFC30)))
 
-ks.test.map <- combined.table %>% group_by(dataset) %>% group_map(~ ks.test(real.subsampled.fc, .x$calculatedFC30))
+p <- seq(0, 1, 0.01)
+p_names <- purrr::map_chr(p, ~paste0(.x*100, "%"))
+p_funs <- map(p, ~partial(quantile, probs = .x, na.rm = TRUE)) %>% 
+  set_names(nm = p_names)
+
+summary.df <- data.frame(combined.table %>% 
+                           group_by(dataset) %>% 
+                           summarize_at(vars(calculatedFC30), funs(!!!p_funs))
+)
+                         
+rownames(summary.df) <- summary.df$dataset
+summary.df <- summary.df[,-1]
+
+ks.test.map <- suppressWarnings(combined.table %>% group_by(dataset) %>% group_map(~ ks.test(real.subsampled.fc$calculatedFC30, .x$calculatedFC30)$p.value))
+names(ks.test.map) <- levels(as.factor(combined.table$dataset))
+kld.test.map.full <- suppressWarnings(combined.table %>% group_by(dataset) %>% group_map(~ KLD(real.subsampled.fc$calculatedFC30, .x$calculatedFC30)))
+kld.test.map.mini <- suppressWarnings(combined.table %>% group_by(dataset) %>% group_map(~ KLD(real.subsampled.fc$calculatedFC30, .x$calculatedFC30)$intrinsic.discrepancy))
+names(kld.test.map.full) <- levels(as.factor(combined.table$dataset))
+names(kld.test.map.mini) <- levels(as.factor(combined.table$dataset))
+saveRDS(ks.test.map, file = 'ks.test.map.061821.RData')
+saveRDS(kld.test.map.full, file = 'kld.test.map.062121.RData')
+saveRDS(summary.df, file = 'summary.df.062121.RData')
 ```
 
-```{r}
-par.hc <- eclust(summary.df, "hclust") # compute hclust
-par.km <- eclust(summary.df, "kmeans", nstart = 20)
-```
 
+```{r fig.width = 14}
+kld <- data.frame(unlist(kld.test.map.mini))
+kld.ranked <- kld %>% top_n(-6)
+plot.table <- par.opts.table %>% filter(dataset %in% rownames(kld.ranked))
+ggplot(data = plot.table, aes(x = calculatedFC30)) +
+  facet_wrap(.~celltype) +
+  ylim(c(0,10)) +
+  geom_density(size = 1.2, alpha = 0.8) + 
+  geom_density(data = real.subsampled.fc, aes(calculatedFC30), color = 'red', fill = 'red', size = 1, alpha = 0.2) +
+  theme_bw()
+```
 
 
