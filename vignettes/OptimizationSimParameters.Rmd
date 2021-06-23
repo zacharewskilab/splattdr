@@ -34,7 +34,7 @@ real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/Zacharewski.tcdd.snseq.d
 colnames(real.data@meta.data)[107] = 'celltype'
 unique.celltypes = unique(real.data$celltype)
 real.sce <- as.SingleCellExperiment(real.data)
-dose_vec = sort(unique(colData(real.sce)$Dose)
+dose_vec = sort(unique(colData(real.sce)$Dose))
 ```
 
 For each cell type in the real dataset we calculate the gene-wise fold changes 
@@ -136,8 +136,8 @@ saveRDS(combined.table, file = 'combined.table.061821.RData')
 #summary.df <- data.frame(combined.table %>% group_by(dataset) %>% summarize(mean = mean(calculatedFC30), median = median(calculatedFC30), min = min(calculatedFC30), max = max(calculatedFC30), sd = sd(calculatedFC30)))
 
 p <- seq(0, 1, 0.01)
-p_names <- purrr::map_chr(p, ~paste0(.x*100, "%"))
-p_funs <- map(p, ~partial(quantile, probs = .x, na.rm = TRUE)) %>% 
+p_names <- map_chr(p, ~paste0(.x*100, "%"))
+p_funs <- map(p, ~purrr::partial(quantile, probs = .x, na.rm = TRUE)) %>% 
   set_names(nm = p_names)
 
 summary.df <- data.frame(combined.table %>% 
@@ -162,7 +162,8 @@ saveRDS(summary.df, file = 'summary.df.062121.RData')
 
 ```{r fig.width = 14}
 kld <- data.frame(unlist(kld.test.map.mini))
-kld.ranked <- kld %>% top_n(-6)
+kld <- kld[!str_detect(rownames(kld), '_0$'), ,drop = FALSE]
+kld.ranked <- kld %>% top_n(-20)
 plot.table <- par.opts.table %>% filter(dataset %in% rownames(kld.ranked))
 ggplot(data = plot.table, aes(x = calculatedFC30)) +
   facet_wrap(.~celltype) +

@@ -113,21 +113,17 @@ splatSimulateDR = function(params = newSplatParams(),
   return(sim)
 }
 
-
-
-# TODO: Does this function still need editing?
-#EDIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#' Simulate group differential expression
+#' Simulate maximal |fold-change|
 #'
-#' Simulate differential expression. Differential expression factors for each
-#' group are produced using \code{\link{getLNormFactors}} and these are added
-#' along with updated means for each group. For paths care is taken to make sure
-#' they are simulated in the correct order.
+#' Simulate the gene-wise scaling factors for differential expression. Scaling 
+#' factor is determined following a log-normal distribution using 
+#' \code{\link{getLNormFactors}}. These values are use to determine peak 
+#' absolute fold change.
 #'
 #' @param sim SingleCellExperiment to add differential expression to.
 #' @param params splatParams object with simulation parameters.
 #'
-#' @return SingleCellExperiment with simulated differential expression.
+#' @return SingleCellExperiment with scaling factors for differential expression.
 #'
 #' @name splatSimDE
 #' 
