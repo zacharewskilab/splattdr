@@ -63,7 +63,7 @@ celltype.
 ggplot(data = real.fc.table, aes(x = calculatedFC30, 
                                  color = celltype, 
                                  fill = celltype)) +
-  geom_density(size = 0.5, alpha = 0.3) + 
+  geom_density(size = 0.5, alpha = 0.3, aes(y=..scaled..)) + 
   theme_bw()
 ```
 We next want to determine how various parameters influences the distribution of

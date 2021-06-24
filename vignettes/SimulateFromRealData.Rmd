@@ -32,17 +32,40 @@ suppressPackageStartupMessages({
 })
 
 set.seed(518)
+```
 
+```{r}
 # Model fitting equations for diagnostic plots
 fo <- PctZero * 100 ~ a * exp(b * MeanLog) + t
 fv <- VarLog ~ poly(MeanLog, 3)
 ```
 
 # Importing an annotated single-cell/nuclei dataset saved as Seurat dataset
+```{r eval = FALSE}
+real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/Zacharewski.tcdd.snseq.doseresponse.011321.RData') #Change to DR Dataset
+colnames(real.data@meta.data)[107] = 'celltype'
+unique.celltypes = unique(real.data$celltype)
+DimPlot(real.data, label = TRUE, group.by = 'celltype') + NoLegend()
+```
 
-```{r eval=FALSE}
-# Link to download real dataset from which parameters were estimated.
-#real.data = readRDS('GSE148339_liver.integrated.final.RData') #Change to DR Dataset
+```{r eval = FALSE}
+real.data = readRDS('/mnt/home/naultran/SNSEQDATA_FINAL/GSE148339_liver.integrated.final.RData')
+unique.celltypes = unique(real.data$celltype)
+DimPlot(real.data, label = TRUE, group.by = 'celltype') + NoLegend()
+```
+
+
+```{r eval = FALSE}
+real.data = readRDS('xiong.nash.cellannotated.RData')
+unique.celltypes = unique(real.data$celltype)
+DimPlot(real.data, label = TRUE, group.by = 'celltype') + NoLegend()
+```
+
+```{r eval = FALSE}
+library(SeuratData)
+data("pbmc3k.final")
+pbmc3k.final$celltype = pbmc3k.final$seurat_annotations
+real.data = pbmc3k.final
 unique.celltypes = unique(real.data$celltype)
 DimPlot(real.data, label = TRUE, group.by = 'celltype') + NoLegend()
 ```
@@ -58,28 +81,34 @@ sca <- as.SingleCellExperiment(
          )
 counts <- as.matrix(counts(sca))
 params.full <- splatEstimate(counts)
+saveRDS(params.full, file = 'params.full.062421.RData')
 ```
+
 
 ```{r}
 sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
 dose.prob = rep(1/9, 9)
 group.Size = 3
 n.Cells = 500*9
-n.Genes = 2000
+n.Genes = 10000
 ```
 
+
 ```{r}
+# Setup params object for dose-response simulation
 params = params.full
 params@nBatches = length(sim.dose)*3
 params@batch.facLoc = rep(0.1, params@nBatches)
 params@batch.facScale = rep(0.1, params@nBatches)
 params@nCells = n.Cells
 params@nGenes = n.Genes
-params@de.facLoc = 3
-params@de.facScale = 0.8
-num.cells = median(table(real.data$celltype))
-saveRDS(table(real.data$celltype), file = 'real.data.table.RData')
 
+num.cells = mean(table(real.data$celltype))
+saveRDS(table(real.data$celltype), file = 'real.data.table.062421.RData')
+```
+
+
+```{r}
 sim.full = splatSimulateDR(params, dose.names = sim.dose, 
                                    dose.prob = dose.prob, 
                                    lib.scale = 60*num.cells^-0.4, 
@@ -87,26 +116,15 @@ sim.full = splatSimulateDR(params, dose.names = sim.dose,
 ```
 
 ```{r}
-# a = summarizeGene(sca,'Real', 'full')
 geneData = rbind(
-  a,
+  summarizeGene(sca,'Real', 'full'),
   summarizeGene(sim.full, 'Simulated', 'full')
 )
-#b = summarizeCell(sca, 'Real', 'full')
+
 cellData = rbind(
-  b,
+  summarizeCell(sca, 'Real', 'full'),
   summarizeCell(sim.full, 'Simulated', 'full')
 )
-
-# geneData = rbind(
-#   summarizeGene(sca,'Real', 'full'),
-#   summarizeGene(sim.full, 'Simulated', 'full')
-# )
-# 
-# cellData = rbind(
-#   summarizeCell(sca, 'Real', 'full'),
-#   summarizeCell(sim.full, 'Simulated', 'full')
-# )
 
 geneReal <- geneData %>% filter(type  == 'Real')
 geneSim <- geneData %>%filter(type == 'Simulated')
@@ -121,22 +139,8 @@ rmse.sim <- RMSE(geneSim$PctZero*100, predict(full.model, newdata = geneSim[,c('
 
 var.rmse.real <- RMSE(geneReal$VarLog, predict(full.model.var, geneReal))
 var.rmse.sim <- RMSE(geneSim$VarLog, predict(full.model.var, geneSim))
-# saveRDS(geneData, file = 'geneData.RData')
-# saveRDS(cellData, file = 'cellData.RData')
-```
-
-```{r}
-wilcoxon.pz.gene = wilcox.test(geneData %>% filter(type == 'Real') %>% pull(PctZero),
-                     geneData %>% filter(type == 'Simulated') %>% pull(PctZero)
-)
-
-wilcoxon.pz.cell = wilcox.test(cellData %>% filter(type == 'Real') %>% pull(PctZero),
-                     cellData %>% filter(type == 'Simulated') %>% pull(PctZero)
-)
-
-wilcoxon.res = c(gene = wilcoxon.pz.gene$p.value, cell = wilcoxon.pz.cell$p.value)
-wilcoxon.res
-saveRDS(wilcoxon.res, file = 'wilcoxon.res.RData')
+saveRDS(geneData, file = 'geneData.062421.RData')
+saveRDS(cellData, file = 'cellData.062421.RData')
 ```
 
 
@@ -144,10 +148,7 @@ saveRDS(wilcoxon.res, file = 'wilcoxon.res.RData')
 full.MeanZero = ggplot(data = geneData, aes(x = MeanLog, y = PctZero*100, fill = type)) +
   geom_point(shape = 21, size = 1.5, alpha = 0.8) + 
   scale_fill_manual(values = c('blue', 'red')) +
-  #geom_line(data = geneReal, aes(x = MeanLog, y = zero.predicted), color = 'black', size = 1.2) +
   labs(x = "Mean log expression", y = "Percent Zero") +
-  #annotate(geom="text", x = 1.5, y = 90, 
-  #         label = paste0('NRMSD: ',round(rmse.sim['nrmsd'],2))) +
   theme_bw() +
   theme(
     legend.title = element_blank(),
@@ -155,7 +156,11 @@ full.MeanZero = ggplot(data = geneData, aes(x = MeanLog, y = PctZero*100, fill =
     legend.background = element_rect(fill = "transparent"),
     legend.text = element_text(size = rel(1.05))
   )
+full.MeanZero
+```
 
+
+```{r fig.width = 8}
 full.MeanVar = ggplot(data = geneData, aes(x = MeanLog, y = VarLog, fill = type)) +
   geom_point(shape = 21, size = 1.5, alpha = 0.8) +
   scale_fill_manual(values = c('blue', 'red')) +
@@ -170,35 +175,22 @@ full.MeanVar = ggplot(data = geneData, aes(x = MeanLog, y = VarLog, fill = type)
     legend.background = element_rect(fill = "transparent"),
     legend.text = element_text(size = rel(1.05))
   )
+full.MeanVar
+```
+```{r}
+colData(sca)$Dose <- ifelse(colData(sca)$treatment == 'CONTROL', 0, 30)
+real.fc <- calcFC(sca)
+sim.fc <- calcFC(sim.full)
 
-full.ZeroGene = ggplot(data = geneData, aes(x = type, y = PctZero*100, fill = type)) +
-  geom_violin(trim = FALSE, alpha = 0.8) +
-  scale_fill_manual(values = c('blue', 'red')) +
-  labs(x = "Dataset", y = "Percent Zero") +
-  geom_boxplot(width = 0.2, fill = "white", aes(color = type), outlier.shape = 21) +
-  scale_color_manual(values = c('blue', 'red')) +
-  theme_bw() +
-  theme(legend.position = "none")
+fc.df <- data.frame(
+  dataset = c(rep('Real', nrow(real.fc)), rep('Simulated', nrow(sim.fc))),
+  foldchange = c(real.fc$fc..dose.., sim.fc$calculatedFC30)
+)
 
-full.ZeroCell = ggplot(data = cellData, aes(x = type , y = PctZero*100, fill = type)) +
-  ylim(0,100) +
-  geom_violin(trim = FALSE, alpha = 0.8) +
-  scale_fill_manual(values = c('blue', 'red')) +
-  labs(x = "Dataset", y = "Percent Zero") +
-  geom_boxplot(width = 0.2, fill = "white", aes(color = type), outlier.shape = 21) +
-  scale_color_manual(values = c('blue', 'red')) +
-  theme_bw() +
-  theme(legend.position = "none")
-
-figure = ggarrange(
-  full.MeanZero,
-  full.MeanVar,
-  full.ZeroGene,
-  full.ZeroCell,
-  labels = c("A","B","C","D"),
-  ncol = 2, nrow = 2)
-
-figure
+ggplot(data = fc.df, aes(x = foldchange, fill = dataset)) +
+  #facet_wrap(~dataset) +
+  geom_density(size = 0.6, alpha = 0.6, aes(y=..scaled..)) + 
+  theme_bw()
 ```
 
 # Evaluating simulations from cell-specific derived parameters
@@ -208,9 +200,9 @@ params.list = list()
 for (ct in unique.celltypes){
   print(ct)
   cell.subset = subset(real.data, subset = celltype == ct)
-  if (length(colnames(cell.subset)) > 3000){
+  if (length(colnames(cell.subset)) > 5000){
     print('shrinking')
-    sampled.cells = sample(colnames(cell.subset), 3000, replace = FALSE)
+    sampled.cells = sample(colnames(cell.subset), 5000, replace = FALSE)
     cell.subset = subset(cell.subset, cells = sampled.cells)  
   }
   
@@ -218,9 +210,9 @@ for (ct in unique.celltypes){
 
   counts = as.matrix(counts(sca))
   params.list[[ct]] = splatEstimate(counts)
-  rm(cell.subset)
-  rm(sca)
-  rm(counts)
+  rm(cell.subset) #clear RAM space
+  rm(sca) #clear RAM space
+  rm(counts) #clear RAM space
   saveRDS(params.list, file = 'params.list.RData')
 }
 ```
@@ -240,8 +232,6 @@ for (ct in unique.celltypes){
   params@batch.facScale = rep(0.1, params@nBatches)
   params@nCells = n.Cells
   params@nGenes = n.Genes
-  params@de.facLoc = 3
-  params@de.facScale = 0.8
   num.cells = table(real.data$celltype)[ct]
   
   print(ct)
@@ -289,36 +279,28 @@ for (ct in unique.celltypes){
   model.var <- lm(fv, geneReal)
   
   # Calculate RMSE values
-  rmse.real <- RMSE(geneReal$PctZero*100, predict(model, newdata = geneReal[,c('MeanLog')]))
-  rmse.sim <- RMSE(geneSim$PctZero*100, predict(model, newdata = geneSim[,c('MeanLog')]))
+  rmse.real <- RMSE(geneReal$PctZero*100, 
+                    predict(model, newdata = geneReal[,c('MeanLog')]))
+  rmse.sim <- RMSE(geneSim$PctZero*100, 
+                   predict(model, newdata = geneSim[,c('MeanLog')]))
   
   var.rmse.real <- RMSE(geneReal$VarLog, predict(model.var, geneReal))
   var.rmse.sim <- RMSE(geneSim$VarLog, predict(model.var, geneSim))
-  
-  wilcoxon.pz.gene = wilcox.test(gene.summaries.list[[ct]] %>% filter(type == 'Real') %>% pull(PctZero),
-                       gene.summaries.list[[ct]] %>% filter(type == 'Simulated') %>% pull(PctZero)
-  )
-
-  wilcoxon.pz.cell = wilcox.test(cell.summaries.list[[ct]] %>% filter(type == 'Real') %>% pull(PctZero),
-                       cell.summaries.list[[ct]] %>% filter(type == 'Simulated') %>% pull(PctZero)
-  )
 
   stat.values[[ct]] = c(real = rmse.real, 
                         sim = rmse.sim, 
                         var.real = var.rmse.real, 
                         var.sim = var.rmse.sim, 
-                        gene.ws = wilcoxon.pz.gene$p.value, 
-                        cell.ws = wilcoxon.pz.cell$p.value,
                         ncells = length(colnames(cell.subset))
                         )
   models[[ct]] = c(mod.1 = model, mod.2 = model.var)
   
   print(ct)
   print(stat.values[[ct]])
-  saveRDS(gene.summaries.list, file = 'gene.summaries2.list.RData')
-  saveRDS(cell.summaries.list, file = 'cell.summaries2.list.RData')
-  saveRDS(stat.values, file = 'stat.values.RData')
-  saveRDS(models, file = 'models.RData')
+  saveRDS(gene.summaries.list, file = 'gene.summaries2.list.062421.RData')
+  saveRDS(cell.summaries.list, file = 'cell.summaries2.list.062421.RData')
+  saveRDS(stat.values, file = 'stat.values.062421.RData')
+  saveRDS(models, file = 'models.062421.RData')
 
 }
 geneData = do.call("rbind", gene.summaries.list)
@@ -340,7 +322,10 @@ MeanZero = ggplot(data = geneData, aes(x = MeanLog, y = PctZero*100, fill = type
     legend.text = element_text(size = rel(1))
   )
 MeanZero
+```
 
+
+```{r fig.width = 12, fig.height = 6}
 MeanVar = ggplot(data = geneData, aes(x = MeanLog, y = VarLog, fill = type)) +
   facet_wrap(~name) +
   geom_point(shape = 21, size = 1.5, alpha = 0.8) + 
@@ -355,15 +340,3 @@ MeanVar = ggplot(data = geneData, aes(x = MeanLog, y = VarLog, fill = type)) +
   )
 MeanVar
 ```
-
-```{r}
-statData$celltype = rownames(statData)
-statData$dataset = 'dr'
-ggplot(data = statData, aes(x = dataset, y = sim.nrmsd, label = celltype)) +
-  geom_boxplot() + 
-  geom_jitter(position = position_jitter(seed = 1), aes(size = ncells)) +
-  geom_text(position = position_jitter(seed = 1), color = 'blue') +
-  theme_bw()
-```
-
-
