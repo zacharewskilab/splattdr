@@ -163,7 +163,7 @@ saveRDS(summary.df, file = 'summary.df.062121.RData')
 ```{r fig.width = 14}
 kld <- data.frame(unlist(kld.test.map.mini))
 kld <- kld[!str_detect(rownames(kld), '_0$'), ,drop = FALSE]
-kld.ranked <- kld %>% top_n(-20)
+kld.ranked <- kld %>% top_n(15)
 plot.table <- par.opts.table %>% filter(dataset %in% rownames(kld.ranked))
 ggplot(data = plot.table, aes(x = calculatedFC30)) +
   facet_wrap(.~celltype) +

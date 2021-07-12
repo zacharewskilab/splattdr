@@ -1,7 +1,7 @@
 ---
 title: "splattDR: Simulating from Real Data and Validating"
 author: "Rance Nault"
-package: "splattDR"
+package: "splattdr"
 data: "Last updated: May 12, 2021"
 output: 
   BiocStyle::html_document:
