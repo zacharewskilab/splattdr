@@ -16,7 +16,8 @@ output:
 # Installation
 The development version of SplattDR can be installed from Github:
 ```{r}
-#devtools::install("path")
+library("devtools")
+devtools::install_github("zacharewskilab/splattdr")
 ```
 
 # Quickstart
@@ -37,6 +38,7 @@ data(params)
 # Define doses and number of cells per dose
 sim.dose = c(0, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)
 dose.prob = rep(1/9, 9)
+params@nGenes = 2000
 
 # Simulate dose response data from parameter estimates
 sim = splatSimulateDR(params, dose.names = sim.dose, dose.prob = dose.prob, verbose = FALSE)

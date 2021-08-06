@@ -10,19 +10,16 @@ simUnchanged(doses, realVec)
 \arguments{
 \item{doses}{A vector of doses to model}
 
-\item{mean.range}{A vector of means obtain from realData}
-
-\item{fc.range}{a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))}
-
-\item{downregulated}{set a TRUE to model repression instead of induction}
+\item{realVec}{A vector of means fear each dose group of equal length as dose}
 }
 \value{
-a list of the model fit parameters including
+a list of the model fit parameters including a resp vector containing
+values for each dose group.
 }
 \description{
 Simulate expression that follows an power model
 response = gamma + beta * doses^delta
 }
 \examples{
-simPower(c(0,1,3,10,30), realData$mean)
+simUnchanged(c(0, 1, 3, 10, 30), rep(1, 5))
 }

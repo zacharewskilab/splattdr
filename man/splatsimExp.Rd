@@ -5,26 +5,40 @@
 \title{Simulate expression that follows an exponential model
 response = response = a * exp(sign * (b * dose)^d)}
 \usage{
-splatsimExp(doses, mean, fc, power = FALSE, max_iter = 40, verbose = FALSE)
+splatsimExp(
+  doses,
+  mean = 1,
+  fc = 1.5,
+  power = FALSE,
+  max_iter = 10,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{doses}{A vector of doses to model}
 
+\item{mean}{A number representing the value at dose 0}
+
+\item{fc}{A number representing the maximum fold-change}
+
 \item{power}{set as TRUE to randomize variable d (default = 1)}
 
-\item{mean.range}{A vector of means obtain from realData}
+\item{max_iter}{A number representing the number of iterations to try before
+relaxing the maximum fold-change criteria}
 
-\item{fc.range}{a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))}
+\item{verbose}{A logical to print additional information}
 
-\item{downregulated}{set a TRUE to model repression instead of induction}
+\item{...}{Additional arguments}
 }
 \value{
-a list of the model fit parameters including
+a list of the model fit parameters including a resp vector containing
+values for each dose group and the fit parameters
 }
 \description{
 Simulate expression that follows an exponential model
 response = response = a * exp(sign * (b * dose)^d)
 }
 \examples{
-simExp(c(0,1,3,10,30), realData$mean)
+splatsimExp(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 }

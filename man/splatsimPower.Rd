@@ -5,31 +5,30 @@
 \title{Simulate expression that follows an power model
 response = gamma + beta * doses^delta}
 \usage{
-splatsimPower(
-  doses,
-  mean,
-  fc,
-  downregulated = FALSE,
-  max_iter = 40,
-  verbose = FALSE
-)
+splatsimPower(doses, mean = 1, fc = 1.5, max_iter = 10, verbose = FALSE, ...)
 }
 \arguments{
 \item{doses}{A vector of doses to model}
 
-\item{downregulated}{set a TRUE to model repression instead of induction}
+\item{mean}{A number representing the value at dose 0}
 
-\item{mean.range}{A vector of means obtain from realData}
+\item{fc}{A number representing the maximum fold-change}
 
-\item{fc.range}{a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))}
+\item{max_iter}{A number representing the number of iterations to try before
+relaxing the maximum fold-change criteria}
+
+\item{verbose}{A logical to print additional information}
+
+\item{...}{Additional arguments}
 }
 \value{
-a list of the model fit parameters including
+a list of the model fit parameters including a resp vector containing
+values for each dose group and the fit parameters
 }
 \description{
 Simulate expression that follows an power model
 response = gamma + beta * doses^delta
 }
 \examples{
-simPower(c(0,1,3,10,30), realData$mean)
+splatsimPower(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 }

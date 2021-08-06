@@ -3,7 +3,7 @@
 \name{modelPower}
 \alias{modelPower}
 \title{Generate count values following a power model
-??(dose)=??+ ?? dose^??}
+response = gamma + beta * dose^delta}
 \usage{
 modelPower(doses, gamma, beta, delta)
 }
@@ -18,5 +18,5 @@ modelPower(doses, gamma, beta, delta)
 }
 \description{
 Generate count values following a power model
-??(dose)=??+ ?? dose^??
+response = gamma + beta * dose^delta
 }

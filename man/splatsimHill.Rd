@@ -5,24 +5,25 @@
 \title{Simulate expression that follows a Hill model
 response = gamma + (V * doses^n)/(k^n + doses^n)}
 \usage{
-splatsimHill(doses, mean = 1, fc = 1.5, verbose = FALSE)
+splatsimHill(doses, mean = 1, fc = 1.5, ...)
 }
 \arguments{
 \item{doses}{A vector of doses to model}
 
-\item{mean.range}{A vector of means obtain from realData}
+\item{mean}{A number representing the value at dose 0}
 
-\item{fc.range}{a vector with the minimum and maximum |fold-change| (e.g., c(1.5, 5))}
+\item{fc}{A number representing the maximum fold-change}
 
-\item{downregulated}{set a TRUE to model repression instead of induction.}
+\item{...}{Additional arguments}
 }
 \value{
-a list of the model fit parameters including
+a list of the model fit parameters including a resp vector containing
+values for each dose group and the fit parameters
 }
 \description{
 Simulate expression that follows a Hill model
 response = gamma + (V * doses^n)/(k^n + doses^n)
 }
 \examples{
-simHill(c(0,1,3,10,30), realData$mean)
+simHill(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 }

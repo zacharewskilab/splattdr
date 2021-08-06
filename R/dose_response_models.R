@@ -13,7 +13,7 @@ modelHill = function(doses, gamma, V, n, k){
   return(z)
 }
 
-#' Generate count values following a Exponental (2 or 3) model
+#' Generate count values following a Exponential (2 or 3) model
 #' response = a * exp(sign * (b * dose)^d)
 #' 
 #' @param doses A vector of doses to model
@@ -28,7 +28,7 @@ modelExp = function(doses, a, b, d){
 }
 
 #' Generate count values following a Exponential (2 or 3) model
-#' response = a(c-(c-1)exp???(-1 (bdose)^d ))
+#' response = a(c-(c-1) * exp(-1 (b * dose)^d))
 #' 
 #' @param doses A vector of doses to model
 #' @param a The background response
@@ -43,7 +43,7 @@ modelExpB = function(doses, a, b, c, d){
 }
 
 #' Generate count values following a power model
-#' ??(dose)=??+ ?? dose^??
+#' response = gamma + beta * dose^delta
 #' 
 #' @param doses A vector of doses to model
 #' @param gamma The background response
@@ -57,7 +57,7 @@ modelPower = function(doses, gamma, beta, delta) {
 }
 
 #' Generate count values following a polynomial model
-#' ??(dose)=??_0+??_(1 ) dose+ ??_(2 ) dose^2+ ??? + ??_(n ) dose^n
+#' response = beta_0 + beta_(1) * dose + beta_(2) * dose^2+...+ beta(n) * dose^n
 #' 
 #' @param doses A vector of doses to model
 #' @param gamma The background response

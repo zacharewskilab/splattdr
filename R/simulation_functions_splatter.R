@@ -2,15 +2,23 @@
 #' response = gamma + (V * doses^n)/(k^n + doses^n)
 #' 
 #' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximum |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction.
-#' @return a list of the model fit parameters including
+#' @param mean A number representing the value at dose 0
+#' @param fc A number representing the maximum fold-change
+#' @param ... Additional arguments
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group and the fit parameters
 #' @examples 
-#' simHill(c(0,1,3,10,30), realData$mean)
+#' simHill(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 #' @export
-splatsimHill = function(doses, mean = 1, fc = 1.5, verbose = FALSE){
+splatsimHill = function(doses, mean = 1, fc = 1.5, ...){
+  
+  assertthat::assert_that(is.numeric(doses))
+  assertthat::assert_that(is.numeric(mean))
+  assertthat::assert_that(is.numeric(fc))
+  
   k.vals = c()
+  # Create a vector of possible k values equally represented between each dose
+  # group.
   for (d in 2:length(doses)){
     k.vals = c(k.vals, seq(doses[d-1], doses[d], length.out = 100))
   }
@@ -24,20 +32,29 @@ splatsimHill = function(doses, mean = 1, fc = 1.5, verbose = FALSE){
   return(list(resp = resp, gamma = gamma, fc = fc, V = V, n = n, k = k))
 }
 
-
 #' Simulate expression that follows an exponential model
 #' response = response = a * exp(sign * (b * dose)^d)
 #' 
 #' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
+#' @param mean A number representing the value at dose 0
+#' @param fc A number representing the maximum fold-change
 #' @param power set as TRUE to randomize variable d (default = 1)
-#' @return a list of the model fit parameters including
+#' @param max_iter A number representing the number of iterations to try before
+#' relaxing the maximum fold-change criteria
+#' @param verbose A logical to print additional information
+#' @param ... Additional arguments
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group and the fit parameters
 #' @examples 
-#' simExp(c(0,1,3,10,30), realData$mean)
+#' splatsimExp(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 #' @export
-splatsimExp = function(doses, mean, fc, power = FALSE, max_iter = 40, verbose = FALSE){
+splatsimExp = function(doses, 
+                       mean = 1, 
+                       fc = 1.5, 
+                       power = FALSE, 
+                       max_iter = 10, 
+                       verbose = FALSE,
+                       ...){
   fc.max = 1E100
   mult.fac = 0.01
   iter = 0
@@ -60,7 +77,7 @@ splatsimExp = function(doses, mean, fc, power = FALSE, max_iter = 40, verbose = 
     if (fc < 1){
       fc.max = 1/fc.max
     }
-    if (iter%%1000000000 == 0){
+    if (iter%%(max_iter*1E8) == 0){
       if (verbose){message("Relaxing exponential fold-change range criteria...")}
       mult.fac = mult.fac * 10
     }
@@ -69,19 +86,20 @@ splatsimExp = function(doses, mean, fc, power = FALSE, max_iter = 40, verbose = 
   return(list(resp = resp, a = a, fc = fc, b = b, d = d))
 }
 
-
 #' Simulate expression that follows an exponential model (2 or 3)
-#' response = a(c-(c-1)exp???(-1 (bdose)^d ))
+#' response = a(c-(c-1) * exp(-1 (b * dose)^d))
 #' 
 #' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
+#' @param mean A number representing the value at dose 0
+#' @param fc A number representing the maximum fold-change
+#' @param ... Additional arguments
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group and the fit parameters
 #' @return a list of the model fit parameters including
 #' @examples 
-#' simExpB(c(0,1,3,10,30), realData$mean)
+#' splatsimExpB(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 #' @export
-splatsimExpB = function(doses, mean, fc = 1.5, verbose = FALSE){
+splatsimExpB = function(doses, mean = 1, fc = 1.5, ...){
   a = mean
   b = runif(1, 0, 1) #CHANGE
   c = fc
@@ -91,20 +109,23 @@ splatsimExpB = function(doses, mean, fc = 1.5, verbose = FALSE){
   return(list(resp = resp, a = a, fc = fc, b = b, c = c, d = d))
 }
 
-
 #' Simulate expression that follows an power model
 #' response = gamma + beta * doses^delta
 #' 
 #' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
+#' @param mean A number representing the value at dose 0
+#' @param fc A number representing the maximum fold-change
+#' @param max_iter A number representing the number of iterations to try before
+#' relaxing the maximum fold-change criteria
+#' @param verbose A logical to print additional information
+#' @param ... Additional arguments
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group and the fit parameters
 #' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
+#' splatsimPower(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
 #' @export
-splatsimPower <- function(doses, mean, fc, downregulated = FALSE, max_iter = 40, 
-                          verbose = FALSE){
+splatsimPower <- function(doses, mean = 1, fc = 1.5, max_iter = 10, 
+                          verbose = FALSE, ...){
   fc.max <- 1E100
   mult.fac <- 0.01
   delta <- runif(1, 0, 5)
@@ -144,17 +165,28 @@ splatsimPower <- function(doses, mean, fc, downregulated = FALSE, max_iter = 40,
       resp= resp.b
     }
     
-    if (iter%%1000000 == 0){
+    if (iter%%(max_iter*1E5) == 0){
       if (verbose){message("Adjusting Power model beta starting parameters...")}
     }
-    if (iter%%(1000000*max_iter) == 0){
+    if (iter%%(max_iter*1E5) == 0){
       if (verbose){message("Failed to find parameter values for power model...")}
     }
   }
   return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
 }
 
-splatsimLinear = function(doses, mean, fc, verbose = FALSE){
+#' Simulate expression that follows a linear
+#' 
+#' @param doses A vector of doses to model
+#' @param mean A number representing the value at dose 0
+#' @param fc A number representing the maximum fold-change
+#' @param ... Additional arguments
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group and the fit parameters
+#' @examples 
+#' splatsimLinear(c(0, 1, 3, 10, 30), mean = 1, fc = 1.5)
+#' @export
+splatsimLinear = function(doses, mean, fc, ...){
   gamma = mean
   beta = ((mean * fc) - mean)/max(doses)
   resp = modelPolynomial(doses, gamma, beta)
@@ -166,134 +198,16 @@ splatsimLinear = function(doses, mean, fc, verbose = FALSE){
 #' response = gamma + beta * doses^delta
 #' 
 #' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
+#' @param realVec A vector of means fear each dose group of equal length as dose
+#' @return a list of the model fit parameters including a resp vector containing
+#' values for each dose group.
 #' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
-#' @export
-simPolynomial = function(doses, mean.range, fc.range = c(1.3, 5), downregulated = FALSE, verbose = FALSE){
-  resp = max(mean.range) * 2 # To initiate while loop
-  polyN = sample(c(2,3,4), 1)
-  
-  while (max(resp) > max(mean.range) | min(resp) < min(mean.range)){
-    gamma = sample(mean.range, 1)
-    if (downregulated){
-      fc = 1/runif(1, fc.range[1], fc.range[2])  
-    } else {
-      fc = runif(1, fc.range[1], fc.range[2])
-    }
-    
-    beta = runif(polyN,0,0.001)
-    resp = modelPolynomial(doses, gamma, beta)
-  }
-  return(list(resp = resp, gamma = gamma, fc = fc, beta = beta))
-}
-
-
-#' Simulate expression that follows an power model
-#' response = gamma + beta * doses^delta
-#' 
-#' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
-#' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
+#' simUnchanged(c(0, 1, 3, 10, 30), rep(1, 5))
 #' @export
 # Unchanged genes
 simUnchanged = function(doses, realVec){
+  assertthat::assert_that(length(doses) == length(realVec))
   n.doses = length(doses)
   resp = sample(realVec, n.doses, replace = FALSE)
   return(list(resp = resp))
-}
-
-
-#' Simulate expression that follows an power model
-#' response = gamma + beta * doses^delta
-#' 
-#' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
-#' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
-#' @export
-# Unchanged genes
-estimateRealVals = function(sim){
-  model.fits = metadata(sim)$modelFits[,1:9]
-  corrected = (model.fits/mean(colSums(assays(sim)$ScaledCellMeans)))*mean(colData(sim)$ExpLibSize)
-  return(corrected)
-}
-
-#' Simulate expression that follows an power model
-#' response = gamma + beta * doses^delta
-#' 
-#' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
-#' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
-#' @export
-# Unchanged genes
-estimateRealVals = function(sim){
-  model.fits = metadata(sim)$modelFits[,1:9]
-  corrected = (model.fits/mean(colSums(assays(sim)$ScaledCellMeans)))*mean(colData(sim)$ExpLibSize)
-  return(corrected)
-}
-
-#' Simulate expression that follows an power model
-#' response = gamma + beta * doses^delta
-#' 
-#' @param doses A vector of doses to model
-#' @param mean.range A vector of means obtain from realData
-#' @param fc.range a vector with the minimum and maximim |fold-change| (e.g., c(1.5, 5))
-#' @param downregulated set a TRUE to model repression instead of induction
-#' @return a list of the model fit parameters including
-#' @examples 
-#' simPower(c(0,1,3,10,30), realData$mean)
-#' @export
-old_splatsimPower = function(doses, mean, fc, downregulated = FALSE, max_iter = 40, verbose = FALSE){
-  fc.max = 1E100
-  mult.fac = 0.01
-  iter = 0
-  beta.fac = 10
-  while (fc.max > fc + fc*mult.fac | fc.max < fc - fc*mult.fac | fc.max < 0){
-    iter = iter + 1
-    gamma = mean
-    if (fc < 1){
-      beta.start = -10^-floor(abs(log(mean)))
-      beta = runif(1, beta.start, beta.start/beta.fac)
-    } else {
-      beta.start = 10^-floor(abs(log(mean)))
-      beta = runif(1, beta.start/beta.fac, beta.start*beta.fac)
-    }
-    
-    delta = runif(1, 0, 5)
-    
-    resp = modelPower(doses, gamma, beta, delta)
-    fc.max = max(resp)/min(resp)
-    if (fc < 1){
-      fc.max = 1/fc.max
-    }
-    if (iter%%1000000 == 0){
-      if (verbose){message("Adjusting Power model beta starting parameters...")}
-      beta.fac = beta.fac * 10
-    }
-    if (iter%%(1000000*max_iter) == 0){
-      if (verbose){message("Failed to find parameter values for power model...")}
-      beta.fac = 10
-      print(mean)
-      print(fc)
-      print(beta)
-      print(beta.start)
-      print('-----')
-    }
-  }
-  return(list(resp = resp, gamma = gamma, fc = fc, beta = beta, delta = delta))
 }

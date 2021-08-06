@@ -3,7 +3,7 @@
 \name{modelExpB}
 \alias{modelExpB}
 \title{Generate count values following a Exponential (2 or 3) model
-response = a(c-(c-1)exp???(-1 (bdose)^d ))}
+response = a(c-(c-1) * exp(-1 (b * dose)^d))}
 \usage{
 modelExpB(doses, a, b, c, d)
 }
@@ -20,5 +20,5 @@ modelExpB(doses, a, b, c, d)
 }
 \description{
 Generate count values following a Exponential (2 or 3) model
-response = a(c-(c-1)exp???(-1 (bdose)^d ))
+response = a(c-(c-1) * exp(-1 (b * dose)^d))
 }

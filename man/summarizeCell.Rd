@@ -2,23 +2,17 @@
 % Please edit documentation in R/Utils.R
 \name{summarizeCell}
 \alias{summarizeCell}
-\title{Generate count values following a Hill model
-response = ?? + (V * dose^n)/(k^n + dose^n)}
+\title{Calculate cell-wise summary values from \code{SingleCellExperiment} object}
 \usage{
-summarizeCell(sce, type, name)
+summarizeCell(sce, dataset.type, dataset.name)
 }
 \arguments{
-\item{doses}{A vector of doses to model}
+\item{sce}{A \code{SingleCellExperiment} object}
 
-\item{gamma}{The background response}
+\item{dataset.type}{A character naming the dataset type (e.g., 'real data')}
 
-\item{V}{Velocity, or the maximal response}
-
-\item{n}{Power of the model. Should be > 1 to avoid an infinite slope.}
-
-\item{k}{Dose were half the response is observed. Equivale of ED/EC50}
+\item{dataset.name}{A character naming the dataset (e.g., 'dose-response')}
 }
 \description{
-Generate count values following a Hill model
-response = ?? + (V * dose^n)/(k^n + dose^n)
+Calculate cell-wise summary values from \code{SingleCellExperiment} object
 }

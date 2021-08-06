@@ -6,7 +6,7 @@
 \alias{splatSimDoseResponseModel}
 \alias{calcFC}
 \alias{calcZeroP}
-\title{Simulate group differential expression}
+\title{Simulate maximal |fold-change|}
 \usage{
 splatSimDoseResponse(sim, params)
 
@@ -27,7 +27,7 @@ calcZeroP(sim)
 \item{params}{splatParams object with simulation parameters.}
 }
 \value{
-SingleCellExperiment with simulated differential expression.
+SingleCellExperiment with scaling factors for differential expression.
 
 SingleCellExperiment with simulated differential expression.
 
@@ -36,10 +36,10 @@ SingleCellExperiment with simulated differential expression.
 SingleCellExperiment with simulated differential expression.
 }
 \description{
-Simulate differential expression. Differential expression factors for each
-group are produced using \code{\link{getLNormFactors}} and these are added
-along with updated means for each group. For paths care is taken to make sure
-they are simulated in the correct order.
+Simulate the gene-wise scaling factors for differential expression. Scaling
+factor is determined following a log-normal distribution using
+\code{\link{getLNormFactors}}. These values are use to determine peak
+absolute fold change.
 
 Simulate differential expression. Differential expression factors for each
 group are produced using \code{\link{getLNormFactors}} and these are added

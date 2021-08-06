@@ -2,23 +2,15 @@
 % Please edit documentation in R/Utils.R
 \name{RMSE}
 \alias{RMSE}
-\title{Generate count values following a Hill model
-response = ?? + (V * dose^n)/(k^n + dose^n)}
+\title{Calculate root mean square error statistics}
 \usage{
 RMSE(m, o)
 }
 \arguments{
-\item{doses}{A vector of doses to model}
+\item{m}{A numeric vector to calculate distance from}
 
-\item{gamma}{The background response}
-
-\item{V}{Velocity, or the maximal response}
-
-\item{n}{Power of the model. Should be > 1 to avoid an infinite slope.}
-
-\item{k}{Dose were half the response is observed. Equivale of ED/EC50}
+\item{o}{A numeric vector to calculate the distance to}
 }
 \description{
-Generate count values following a Hill model
-response = ?? + (V * dose^n)/(k^n + dose^n)
+Calculate root mean square error statistics
 }

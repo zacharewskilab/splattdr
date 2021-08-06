@@ -1,12 +1,16 @@
 #' @name params
-#' @title A sample SingleCellExperiment dataset generated from a dose-response  
-#' experiments used to illustrate dose-response data simulation.
-#' @description This data set contains counts for 2000 genes for 40 cells. They UPDATE!!!
-#' are from a real experiment, but details have been anonymised. UPDATE!!!
-#' @return NULL, but makes aavailable a matrix of count data UPDATE!!!
-#' @docType data UPDATE!!!
-#' @usage example_sc_cholangiocytes UPDATE!!!
-#' @format a matrix instance, 1 row per gene. UPDATE!!!
-#' @source Wellcome Trust Centre for Human Genetics, Oxford UPDATE!!!
-#' @author Davis McCarthy, 2015-03-05 UPDATE!!!
+#' @title A sample Splatter parameter object generated from a real dose-response  
+#' single-nuclei RNA sequencing experiment.
+#' @description This parameter object was generated using the `splatEstimate` 
+#' function of `Splatter` on real dose-response single-nuclei RNA sequencing
+#' data. The number of genes was changed to 2000 and number of cells to 4500 to
+#' serve as template for generating dose-response simulated data consisting of
+#' 9 dose groups. The number of batches was updated to 27 to represent 3 
+#' biological replicates for each dose group. 
+#' @return SplatParams object 
+#' @docType data
+#' @usage data(params)
+#' @format SplatParams
+#' @source Michigan State University, East Lansing, MI
+#' @author Rance Nault, 2021-08-06
 "params"

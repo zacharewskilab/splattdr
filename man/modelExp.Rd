@@ -2,7 +2,7 @@
 % Please edit documentation in R/dose_response_models.R
 \name{modelExp}
 \alias{modelExp}
-\title{Generate count values following a Exponental (2 or 3) model
+\title{Generate count values following a Exponential (2 or 3) model
 response = a * exp(sign * (b * dose)^d)}
 \usage{
 modelExp(doses, a, b, d)
@@ -17,6 +17,6 @@ modelExp(doses, a, b, d)
 \item{d}{'Power' of the model. Set as 1 for Exponential 2}
 }
 \description{
-Generate count values following a Exponental (2 or 3) model
+Generate count values following a Exponential (2 or 3) model
 response = a * exp(sign * (b * dose)^d)
 }

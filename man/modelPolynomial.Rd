@@ -3,7 +3,7 @@
 \name{modelPolynomial}
 \alias{modelPolynomial}
 \title{Generate count values following a polynomial model
-??(dose)=??\emph{0+??}(1 ) dose+ ??\emph{(2 ) dose^2+ ??? + ??}(n ) dose^n}
+response = beta_0 + beta_(1) * dose + beta_(2) * dose^2+...+ beta(n) * dose^n}
 \usage{
 modelPolynomial(doses, gamma, beta)
 }
@@ -16,5 +16,5 @@ modelPolynomial(doses, gamma, beta)
 }
 \description{
 Generate count values following a polynomial model
-??(dose)=??\emph{0+??}(1 ) dose+ ??\emph{(2 ) dose^2+ ??? + ??}(n ) dose^n
+response = beta_0 + beta_(1) * dose + beta_(2) * dose^2+...+ beta(n) * dose^n
 }

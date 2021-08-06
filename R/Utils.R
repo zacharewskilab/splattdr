@@ -1,33 +1,31 @@
-#' Generate count values following a Hill model
-#' response = ?? + (V * dose^n)/(k^n + dose^n)
+#' Calculate gene-wise summary values from `SingleCellExperiment` object
 #' 
-#' @param doses A vector of doses to model
-#' @param gamma The background response
-#' @param V Velocity, or the maximal response
-#' @param n Power of the model. Should be > 1 to avoid an infinite slope.
-#' @param k Dose were half the response is observed. Equivale of ED/EC50
+#' @param sce A `SingleCellExperiment` object
+#' @param dataset.type A character naming the dataset type (e.g., 'real data')
+#' @param dataset.name A character naming the dataset (e.g., 'dose-response')
+#' @result A data frame with gene-wise mean log expression, variance of the log
+#' expression, percentage of zeroes, and dataset metadata.
 #' @export
-summarizeGene = function(sce, type, name){
+summarizeGene = function(sce, dataset.type, dataset.name){
   df = data.frame(
     MeanLog = apply(logcounts(sce), 1, function(x) mean(x)),
     VarLog = apply(logcounts(sce), 1, function(x) var(x)),
     PctZero = apply(logcounts(sce), 1, function(x) sum(x == 0)/length(x)),
-    type = type,
-    name = name
+    type = dataset.type,
+    name = dataset.name
   )
   return(df)
 }
 
-#' Generate count values following a Hill model
-#' response = ?? + (V * dose^n)/(k^n + dose^n)
+#' Calculate cell-wise summary values from `SingleCellExperiment` object
 #' 
-#' @param doses A vector of doses to model
-#' @param gamma The background response
-#' @param V Velocity, or the maximal response
-#' @param n Power of the model. Should be > 1 to avoid an infinite slope.
-#' @param k Dose were half the response is observed. Equivale of ED/EC50
+#' @param sce A `SingleCellExperiment` object
+#' @param dataset.type A character naming the dataset type (e.g., 'real data')
+#' @param dataset.name A character naming the dataset (e.g., 'dose-response')
+#' @result A data frame with cell-wise mean log expression, variance of the log
+#' expression, percentage of zeroes, and dataset metadata.
 #' @export
-summarizeCell = function(sce, type, name){
+summarizeCell = function(sce, dataset.type, dataset.name){
   df = data.frame(
     MeanLog = apply(logcounts(sce), 2, function(x) mean(x)),
     VarLog = apply(logcounts(sce), 2, function(x) var(x)),
@@ -38,16 +36,13 @@ summarizeCell = function(sce, type, name){
   return(df)
 }
 
-#' Generate count values following a Hill model
-#' response = ?? + (V * dose^n)/(k^n + dose^n)
+#' Calculate root mean square error statistics
 #' 
-#' @param doses A vector of doses to model
-#' @param gamma The background response
-#' @param V Velocity, or the maximal response
-#' @param n Power of the model. Should be > 1 to avoid an infinite slope.
-#' @param k Dose were half the response is observed. Equivale of ED/EC50
+#' @param m A numeric vector to calculate distance from
+#' @param o A numeric vector to calculate the distance to
 #' @export
 RMSE <- function(m, o){
+  assertthat::assert_that(length(m) == length(o))
   rmsd <- sqrt(mean((m - o)^2))
   nrmsd <- rmsd/(max(m) - min(m))
   rmsdiqr <- rmsd/(quantile(m, probs = 0.75) - quantile(m, probs = 0.25))
