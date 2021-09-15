@@ -1,8 +1,8 @@
 ---
-title: "splattDR: simulating dose-response single-cell data"
+title: "splattdr: simulating dose-response single-cell data"
 author: "Rance Nault"
 package: "splattDR"
-data: "Last updated: April 7, 2021"
+data: "Last updated: September 15, 2021"
 output: 
   BiocStyle::html_document:
     toc: true
@@ -12,13 +12,6 @@ output:
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
-
-# Installation
-The development version of SplattDR can be installed from Github:
-```{r}
-library("devtools")
-devtools::install_github("zacharewskilab/splattdr")
-```
 
 # Quickstart
 SplattDR begins with a `SingleCellExperiment` object. In this example we begin with a mock dataset generated using the `scater` package.  
