@@ -43,3 +43,4 @@ Please cite ["Nault, R., Saha, S., Bhattacharya, S., Dodson, J., Sinha, S., Mait
 ```
 
 [Splatter]: http://bioconductor.org/packages/release/bioc/html/splatter.html
+[paper]: https://www.biorxiv.org/content/10.1101/2021.09.08.459475v1.full
