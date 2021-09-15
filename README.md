@@ -1,15 +1,15 @@
-# splattDR
-This package implements a new Bayesian test for detecting differential gene expression over multiple dose groups in single cell gene expression studies. 
+# splattdr
+The splattdr package is a wrapper for Splatter allowing the simulation of dose-response single-cell RNA sequencing data.
 
 ## Installation
-Be sure to install dependencies before installing splattDR
+Splattdr depends on the Splatter package (1.14.1) which can be installed as follows
 ```{r}
 if (!requireNamespace("BiocManager", quietly=TRUE))
     install.packages("BiocManager")
-BiocManager::install("splatter")
+BiocManager::install("splatter", version = "1.14.1")
 ```
 
-Then install splattDR directly from Github
+Then install splattdr directly from Github
 ```{r}
 library("devtools")
 devtools::install_github("zacharewskilab/splattdr")
@@ -25,5 +25,21 @@ _dose-response models derived from [BMD Express](https://bmdexpress-2.readthedoc
 * Exponential 2 - 5
 * Power
 * Linear
-* Polynomial 2-4
 
+## Citing splattdr
+Please cite ["Nault, R., Saha, S., Bhattacharya, S., Dodson, J., Sinha, S., Maiti, T. and Zacharewski, T. (2021). Benchmarking of a Bayesian single cell RNAseq differential gene expression test for dose-response study designs. bioRxiv; doi.org/10.1101/2021.09.08.459475"][paper]
+
+```
+@article{,
+   author = {Nault, Rance and Saha, Satabdi and Bhattacharya, Sudin and Dodson, Jack and Sinha, Samiran and Maiti, Tapabrata and Zacharewski, Tim},
+   title = {Benchmarking of a Bayesian single cell RNAseq differential gene expression test for dose-response study designs},
+   journal = {bioRxiv},
+   pages = {2021.09.08.459475},
+   DOI = {10.1101/2021.09.08.459475},
+   url = {http://biorxiv.org/content/early/2021/09/10/2021.09.08.459475.abstract},
+   year = {2021},
+   type = {Journal Article}
+}
+```
+
+[Splatter]: http://bioconductor.org/packages/release/bioc/html/splatter.html
