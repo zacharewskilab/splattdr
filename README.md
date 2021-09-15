@@ -1,8 +1,8 @@
 # splattdr
-The splattdr package is a wrapper for Splatter allowing the simulation of dose-response single-cell RNA sequencing data.
+The splattdr package is a wrapper for [`Splatter`][Splatter] allowing the simulation of dose-response single-cell RNA sequencing data.
 
 ## Installation
-Splattdr depends on the Splatter package (1.14.1) which can be installed as follows
+Splattdr depends on the [`Splatter`][Splatter] package (1.14.1) which can be installed as follows
 ```{r}
 if (!requireNamespace("BiocManager", quietly=TRUE))
     install.packages("BiocManager")
